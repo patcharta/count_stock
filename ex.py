@@ -7,11 +7,8 @@ import pytz
 import requests
 from bs4 import BeautifulSoup
 import re
-import ftplib
-from PIL import Image
 import os
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
+from PIL import Image
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -20,17 +17,20 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def check_credentials(username, password):
     user_db = {
-        'nui': '1234',
-        'pan': '5678',
-        'sand': '9876',
-        'fai': '5432',
-        'io': '1234',
-        'dream': '5678',
-        'tan': '9876',
-        'admin': 'adminpassword',
-        'vasz': '1234'
+        'nui': ('1234', 'regular'),
+        'pan': ('5678', 'regular'),
+        'sand': ('9876', 'regular'),
+        'fai': ('5432', 'regular'),
+        'io': ('1234', 'regular'),
+        'dream': ('5678', 'regular'),
+        'tan': ('9876', 'special'),
+        'admin': ('adminpassword', 'special'),
+        'vasz': ('1234', 'special')
     }
-    return user_db.get(username.lower()) == password
+    user_info = user_db.get(username.lower())
+    if user_info and user_info[0] == password:
+        return user_info[1]
+    return None
 
 @st.cache_data
 def get_connection_string(company):
@@ -55,8 +55,8 @@ def save_to_database(product_data, conn_str):
         remark = product_data.get('Remark', '')
         query = '''
         INSERT INTO ERP_COUNT_STOCK (
-            ID, LOGDATE, ENTERBY, ITMID, ITEMNAME, UNIT, REMARK, ACTUAL, INSTOCK, WHCID, STATUS, CONDITION, FILENAME
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ID, LOGDATE, ENTERBY, ITMID, ITEMNAME, UNIT, REMARK, ACTUAL, INSTOCK, WHCID, STATUS, CONDITION
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
         with pyodbc.connect(conn_str) as conn:
             cursor = conn.cursor()
@@ -68,42 +68,16 @@ def save_to_database(product_data, conn_str):
                 product_data['Product_ID'], product_data['Product_Name'],
                 product_data['Purchasing_UOM'], remark,
                 product_data['Quantity'], product_data['Total_Balance'], product_data['whcid'],
-                product_data['Status'], product_data['Condition'], product_data['Filename']
+                product_data['Status'], product_data['Condition'] # Adding status and condition
             ]
             cursor.execute(query, data)
             conn.commit()
-
-            # Transfer image to the server
-            if product_data['Filename']:
-                upload_image(product_data['Filename'])
-                
         st.success("Data saved successfully!")
     except pyodbc.Error as e:
         st.error(f"Error inserting data: {e}")
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-def upload_image(filename):
-    try:
-        # Authenticate with Google Drive
-        gauth = GoogleAuth()
-        # Creates local webserver and auto handles authentication.
-        gauth.LocalWebserverAuth()  
-        drive = GoogleDrive(gauth)
-
-        # Define the folder ID where you want to upload the image
-        folder_id = '1pVCbaPlFH39hLUJIqmviZzgsNytT1EFC'
-
-        # Upload the image file
-        file_metadata = {'title': filename, 'parents': [{'id': folder_id}]}
-        file = drive.CreateFile(file_metadata)
-        file.SetContentFile(os.path.join("product_images", filename))
-        file.Upload()
-
-        st.success("Image uploaded successfully!")
-    except Exception as e:
-        st.error(f"Error uploading image: {e}")
-        
 @st.cache_data
 def load_data(selected_product_name, selected_whcid, conn_str):
     query_detail = '''
@@ -171,6 +145,8 @@ def select_product(company):
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
+        #selected_brand_name = selected_item['BRAND_NAME'].iloc[0] if not selected_item.empty else ""
+        #st.write(f"คุณเลือกสินค้า: {selected_product_name} - {selected_brand_name}")
         st.write(f"คุณเลือกสินค้า: {selected_product_name}")
         st.markdown("---")
         return selected_product_name, selected_item
@@ -193,95 +169,89 @@ def get_image_url(product_name):
         st.error(f"Error fetching image: {e}")
         return None
 
-def display_saved_images(filename):
-    image_path = os.path.join("product_images", filename)
-    if os.path.exists(image_path):
-        image = Image.open(image_path)
-        st.image(image, caption="Saved Image", use_column_width=True)
-    else:
-        st.write("No image available for this product.")
-
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
-    total_balance = 0
+    total_balance = 0  # Ensure total_balance is defined
 
     if not filtered_items_df.empty:
         st.write("รายละเอียดสินค้า:")
+        # Combine the columns 'CAB_NAME', 'SHE_NAME', and 'BLK_NAME' into a single column
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
         filtered_items_df_positive_balance = filtered_items_df[filtered_items_df['INSTOCK'] > 0]
 
+        display_columns = ['Location', 'BATCH_NO']
+        if st.session_state.user_role == 'special':
+            display_columns.append('INSTOCK')
+
         if not filtered_items_df_positive_balance.empty:
-            display_columns = ['Location', 'BATCH_NO', 'INSTOCK']
             filtered_items_df_positive_balance = filtered_items_df_positive_balance[display_columns]
             filtered_items_df_positive_balance.index = range(1, len(filtered_items_df_positive_balance) + 1)
             st.dataframe(filtered_items_df_positive_balance)
-            total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
-            st.write(f"รวมยอดสินค้าในคลัง: {total_balance}")
+            if 'INSTOCK' in display_columns:
+                total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
+                st.write(f"รวมยอดสินค้าในคลัง: {total_balance}")
         else:
-            st.write("ไม่มีสินค้าคงเหลือในคลัง")
+            st.write("ไม่มีสินค้าที่มียอดเหลือในคลัง")
 
-        product_quantity = st.number_input(label='จำนวนสินค้า 🛒', min_value=0, value=st.session_state.product_quantity)
-        status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
-        condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
-        remark = st.text_area('หมายเหตุ 💬 ', value=st.session_state.remark)
-        st.markdown("---")
+        if not filtered_items_df.empty:
+            product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
+        else:
+            product_name = f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
         
-        uploaded_file = st.camera_input("Take a picture of the product")
+        image_url = get_image_url(product_name)
+        if image_url:
+            st.image(image_url, width=300)
+        else:
+            st.write("ไม่พบรูปภาพของสินค้า")
 
-        if uploaded_file is not None:
-            if 'uploaded_file' not in st.session_state:
-                st.session_state.uploaded_file = uploaded_file
-            else:
-                st.session_state.uploaded_file = uploaded_file
-
-            img = Image.open(st.session_state.uploaded_file)
-            img_filename = f"{selected_item['ITMID'].iloc[0]}_{time.strftime('%Y%m%d-%H%M%S')}.png"
-            if not os.path.exists("product_images"):
-                os.makedirs("product_images")
-            img_path = os.path.join("product_images", img_filename)
-            img.save(img_path)
-            st.image(img, caption="Captured Image", use_column_width=True)
-
-        if st.button('👉 Enter'):
-            if status is None or condition is None:
-                st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
-            elif status == "ผสม" and not remark.strip():
-                st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
-            elif product_quantity > 0:
-                timezone = pytz.timezone('Asia/Bangkok')
-                current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
-                product_data = {
-                    'Time': current_time,
-                    'Enter_By': st.session_state.username.upper(),
-                    'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
-                    'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
-                    'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
-                    'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
-                    'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                    'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                    'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                    'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
-                    'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
-                    'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
-                    'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
-                    'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
-                    'Quantity': int(product_quantity),
-                    'Remark': remark,
-                    'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
-                    'Status': status,
-                    'Condition': condition,
-                    'Filename': img_filename if img_filename else ""
-                }
-                st.session_state.product_data.append(product_data)
-                save_to_database(product_data, conn_str)
-                st.session_state.product_data = []
-                st.session_state.product_quantity = 0
-                st.session_state.remark = ""
-                time.sleep(2)
-                del st.session_state['selected_product']
-                st.experimental_rerun()
     else:
-        st.write("ไม่พบข้อมูลสินค้า")
+        st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
+
+    # Enable quantity and remark input even if there are no products with positive balance
+    product_quantity = st.number_input(label='จำนวนสินค้า 🛒', min_value=0, value=st.session_state.product_quantity)
+    status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
+    condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
+    remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
+    #remark = st.text_area('หมายเหตุ 💬 ', value=st.session_state.remark)
+    st.markdown("---")
+
+    if st.button('👉 Enter'):
+        if status is None or condition is None:
+            st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
+        elif status == "ผสม" and not remark.strip():
+            st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
+        elif product_quantity >= 0:
+            timezone = pytz.timezone('Asia/Bangkok')
+            current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+            product_data = {
+                'Time': current_time,
+                'Enter_By': st.session_state.username.upper(),
+                'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
+                'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
+                'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
+                'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
+                'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
+                'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
+                'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
+                'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
+                'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
+                'Quantity': int(product_quantity),
+                'Remark': remark,
+                'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
+                'Status': status,
+                'Condition': condition
+            }
+            st.session_state.product_data.append(product_data)
+            save_to_database(product_data, conn_str)
+            st.session_state.product_data = []
+            st.session_state.product_quantity = 0
+            st.session_state.remark = ""
+            time.sleep(2)
+            del st.session_state['selected_product']
+            st.experimental_rerun()
 
 def login_section():
     st.write("## Login 🚚")
@@ -294,9 +264,11 @@ def login_section():
         st.session_state.company = company
         # Get the connection string based on the selected company
         conn_str = get_connection_string(company)
-        if check_credentials(username, password):  # Corrected call
+        user_role = check_credentials(username, password)
+        if user_role:  # Corrected call
             st.session_state.logged_in = True
             st.session_state.username = username
+            st.session_state.user_role = user_role
             st.success(f"🎉🎉 Welcome {username}")
             time.sleep(1)
             st.experimental_rerun()
