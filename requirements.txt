@@ -7,3 +7,4 @@ configparser
 beautifulsoup4
 requests
 PyDrive
+cv2
