@@ -23,6 +23,7 @@ def check_credentials(username, password):
         'fai': ('5432', 'regular'),
         'io': ('1234', 'regular'),
         'dream': ('5678', 'regular'),
+        'admin1': ('adminpassword', 'regular'),
         'tan': ('9876', 'special'),
         'admin': ('adminpassword', 'special'),
         'vasz': ('1234', 'special')
