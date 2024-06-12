@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
+import cv2
+from pyzbar import pyzbar
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -144,6 +146,28 @@ def select_product(company):
     
     selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
+    if st.button("Take a picture"):
+        # Open the device camera
+        cap = cv2.VideoCapture(0)
+        ret, frame = cap.read()
+        cap.release()
+
+        if ret:
+            # Convert frame to Image
+            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            
+            # Display the captured image
+            st.image(img, caption="Captured Image", use_column_width=True)
+
+            # Decode any barcode in the captured image
+            barcodes = pyzbar.decode(frame)
+            if barcodes:
+                barcode_value = barcodes[0].data.decode("utf-8")
+                st.success(f"รหัสบาร์โค้ด: {barcode_value}")
+                # Perform actions with the barcode value here
+            else:
+                st.warning("ไม่พบบาร์โค้ดในภาพ")
+
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
         st.write(f"คุณเลือกสินค้า: {selected_product_name}")
@@ -151,6 +175,7 @@ def select_product(company):
         return selected_product_name, selected_item
     else:
         return None, None
+
 
 def get_image_url(product_name):
     try:
