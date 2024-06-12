@@ -87,11 +87,12 @@ def upload_image(filename):
     try:
         # Authenticate with Google Drive
         gauth = GoogleAuth()
-        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.
+        # Creates local webserver and auto handles authentication.
+        gauth.LocalWebserverAuth()  
         drive = GoogleDrive(gauth)
 
         # Define the folder ID where you want to upload the image
-        folder_id = 'Image'
+        folder_id = '1pVCbaPlFH39hLUJIqmviZzgsNytT1EFC'
 
         # Upload the image file
         file_metadata = {'title': filename, 'parents': [{'id': folder_id}]}
@@ -102,7 +103,7 @@ def upload_image(filename):
         st.success("Image uploaded successfully!")
     except Exception as e:
         st.error(f"Error uploading image: {e}")
-
+        
 @st.cache_data
 def load_data(selected_product_name, selected_whcid, conn_str):
     query_detail = '''
