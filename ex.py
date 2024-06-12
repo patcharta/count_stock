@@ -287,7 +287,7 @@ def main_section():
                 FROM ERP_WAREHOUSES_CODE y
                 WHERE y.EDITDATE IS NULL
                 '''
-                               whcid_df = pd.read_sql(whcid_query, conn)
+                whcid_df = pd.read_sql(whcid_query, conn)
                 selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
                 if st.button("👉 Enter WHCID"):
                     st.session_state.selected_whcid = selected_whcid
