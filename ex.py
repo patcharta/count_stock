@@ -205,7 +205,8 @@ def count_product(selected_product_name, selected_item, conn_str):
         st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
 
     if st.session_state.user_role == 'regular' and 'INSTOCK' in filtered_items_df.columns:
-        filtered_items_df = filtered_items_df.drop(columns=['INSTOCK'])
+        # Calculate total_balance only if the user is not special (regular)
+        total_balance = filtered_items_df['INSTOCK'].sum()
     
     product_quantity = st.number_input(label='จำนวนสินค้า 🛒', min_value=0, value=st.session_state.product_quantity)
     status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
