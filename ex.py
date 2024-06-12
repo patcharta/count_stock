@@ -206,6 +206,9 @@ def count_product(selected_product_name, selected_item, conn_str):
     else:
         st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
 
+    if st.session_state.user_role == 'regular' and 'INSTOCK' in filtered_items_df.columns:
+        filtered_items_df = filtered_items_df.drop(columns=['INSTOCK'])
+    
     product_quantity = st.number_input(label='จำนวนสินค้า 🛒', min_value=0, value=st.session_state.product_quantity)
     status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
     condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
