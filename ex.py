@@ -8,7 +8,6 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import os
-import cv2
 from PIL import Image
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -146,7 +145,7 @@ def select_product(company):
 
     if st.button("Take a picture"):
         # Open the device camera
-        cap = cv2.VideoCapture(0)
+        uploaded_file = st.camera_input("Take a picture of the product")
         ret, frame = cap.read()
         cap.release()
 
