@@ -10,6 +10,8 @@ import re
 import ftplib
 from PIL import Image
 import os
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -83,11 +85,21 @@ def save_to_database(product_data, conn_str):
 
 def upload_image(filename):
     try:
-        ftp = ftplib.FTP('61.91.59.134')
-        ftp.login('your_ftp_username', 'your_ftp_password')
-        with open(os.path.join("product_images", filename), 'rb') as file:
-            ftp.storbinary('STOR ' + filename, file)
-        ftp.quit()
+        # Authenticate with Google Drive
+        gauth = GoogleAuth()
+        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.
+        drive = GoogleDrive(gauth)
+
+        # Define the folder ID where you want to upload the image
+        folder_id = 'Image'
+
+        # Upload the image file
+        file_metadata = {'title': filename, 'parents': [{'id': folder_id}]}
+        file = drive.CreateFile(file_metadata)
+        file.SetContentFile(os.path.join("product_images", filename))
+        file.Upload()
+
+        st.success("Image uploaded successfully!")
     except Exception as e:
         st.error(f"Error uploading image: {e}")
 
