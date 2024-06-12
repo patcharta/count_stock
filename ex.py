@@ -146,8 +146,6 @@ def select_product(company):
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
-        #selected_brand_name = selected_item['BRAND_NAME'].iloc[0] if not selected_item.empty else ""
-        #st.write(f"คุณเลือกสินค้า: {selected_product_name} - {selected_brand_name}")
         st.write(f"คุณเลือกสินค้า: {selected_product_name}")
         st.markdown("---")
         return selected_product_name, selected_item
@@ -265,7 +263,7 @@ def login_section():
         # Get the connection string based on the selected company
         conn_str = get_connection_string(company)
         user_role = check_credentials(username, password)
-        if user_role:  # Corrected call
+        if user_role:
             st.session_state.logged_in = True
             st.session_state.username = username
             st.session_state.user_role = user_role
@@ -289,7 +287,7 @@ def main_section():
                 FROM ERP_WAREHOUSES_CODE y
                 WHERE y.EDITDATE IS NULL
                 '''
-                whcid_df = pd.read_sql(whcid_query, conn)
+                               whcid_df = pd.read_sql(whcid_query, conn)
                 selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
                 if st.button("👉 Enter WHCID"):
                     st.session_state.selected_whcid = selected_whcid
@@ -330,3 +328,4 @@ def app():
 
 if __name__ == "__main__":
     app()
+
