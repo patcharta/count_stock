@@ -6,6 +6,4 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-PyDrive
-opencv-python-headless==4.5.4.58
-pip freeze
+
