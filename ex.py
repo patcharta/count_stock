@@ -9,6 +9,9 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+from io import BytesIO
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -56,8 +59,8 @@ def save_to_database(product_data, conn_str):
         remark = product_data.get('Remark', '')
         query = '''
         INSERT INTO ERP_COUNT_STOCK (
-            ID, LOGDATE, ENTERBY, ITMID, ITEMNAME, UNIT, REMARK, ACTUAL, INSTOCK, WHCID, STATUS, CONDITION
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ID, LOGDATE, ENTERBY, ITMID, ITEMNAME, UNIT, REMARK, ACTUAL, INSTOCK, WHCID, STATUS, CONDITION, FILENAME
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         '''
         with pyodbc.connect(conn_str) as conn:
             cursor = conn.cursor()
@@ -69,7 +72,7 @@ def save_to_database(product_data, conn_str):
                 product_data['Product_ID'], product_data['Product_Name'],
                 product_data['Purchasing_UOM'], remark,
                 product_data['Quantity'], product_data['Total_Balance'], product_data['whcid'],
-                product_data['Status'], product_data['Condition'] # Adding status and condition
+                product_data['Status'], product_data['Condition'], product_data['Filename'] # Adding status and condition
             ]
             cursor.execute(query, data)
             conn.commit()
@@ -78,6 +81,34 @@ def save_to_database(product_data, conn_str):
         st.error(f"Error inserting data: {e}")
     except Exception as e:
         st.error(f"Unexpected error: {e}")
+
+def upload_image(filename):
+    try:
+        # Authenticate with Google Drive
+        gauth = GoogleAuth()
+        gauth.LocalWebserverAuth()  # Creates local webserver and auto handles authentication.
+        drive = GoogleDrive(gauth)
+
+        # Define the folder ID where you want to upload the image
+        folder_id = '1pVCbaPlFH39hLUJIqmviZzgsNytT1EFC'
+
+        # Create a new filename
+        img_filename = f"{filename[:-4]}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jpg"
+
+        # Upload the image file
+        file_metadata = {'title': img_filename, 'parents': [{'id': folder_id}]}
+        image_bytes = BytesIO()
+        img_path = os.path.join("product_images", filename)
+        with open(img_path, "rb") as img_file:
+            image_bytes.write(img_file.read())
+        image_bytes.seek(0)
+        file = drive.CreateFile(file_metadata)
+        file.SetContentFile(image_bytes)
+        file.Upload()
+
+        st.success("Image uploaded successfully!")
+    except Exception as e:
+        st.error(f"Error uploading image: {e}")
 
 @st.cache_data
 def load_data(selected_product_name, selected_whcid, conn_str):
@@ -168,6 +199,14 @@ def get_image_url(product_name):
         st.error(f"Error fetching image: {e}")
         return None
 
+def display_saved_images(filename):
+    image_path = os.path.join("product_images", filename)
+    if os.path.exists(image_path):
+        image = Image.open(image_path)
+        st.image(image, caption="Saved Image", use_column_width=True)
+    else:
+        st.write("No image available for this product.")
+
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
     total_balance = 0
@@ -213,6 +252,28 @@ def count_product(selected_product_name, selected_item, conn_str):
     condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
     remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
     st.markdown("---")
+        
+    uploaded_file = st.camera_input("Take a picture of the product")
+
+    if uploaded_file is not None:
+        if 'uploaded_file' not in st.session_state:
+            st.session_state.uploaded_file = uploaded_file
+        else:
+            st.session_state.uploaded_file = uploaded_file
+
+        img = Image.open(st.session_state.uploaded_file)
+        img_filename = f"{selected_item['ITMID'].iloc[0]}_{time.strftime('%Y%m%d-%H%M%S')}.png"
+        if not os.path.exists("product_images"):
+            os.makedirs("product_images")
+        img_path = os.path.join("product_images", img_filename)
+        img.save(img_path)
+        st.image(img, caption="Captured Image", use_column_width=True)
+
+
+    
+
+
+
 
     if st.button('👉 Enter'):
         if status is None or condition is None:
@@ -241,7 +302,8 @@ def count_product(selected_product_name, selected_item, conn_str):
                 'Remark': remark,
                 'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
                 'Status': status,
-                'Condition': condition
+                'Condition': condition,
+                'Filename' : img_filename if img_filename else ""
             }
             st.session_state.product_data.append(product_data)
             save_to_database(product_data, conn_str)
@@ -329,4 +391,3 @@ def app():
 
 if __name__ == "__main__":
     app()
-
