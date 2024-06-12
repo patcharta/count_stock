@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
+
 # Set page configuration
 st.set_page_config(layout="wide")
 
