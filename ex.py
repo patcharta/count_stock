@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import re
 import ftplib
 from PIL import Image
+import os
 
 # Set page configuration
 st.set_page_config(layout="wide")
