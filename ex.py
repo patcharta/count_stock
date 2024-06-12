@@ -9,8 +9,6 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
-import cv2
-from pyzbar import pyzbar
 
 # Set page configuration
 st.set_page_config(layout="wide")
