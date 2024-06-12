@@ -172,11 +172,10 @@ def get_image_url(product_name):
 
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
-    total_balance = 0  # Ensure total_balance is defined
+    total_balance = 0
 
     if not filtered_items_df.empty:
         st.write("รายละเอียดสินค้า:")
-        # Combine the columns 'CAB_NAME', 'SHE_NAME', and 'BLK_NAME' into a single column
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
         filtered_items_df_positive_balance = filtered_items_df[filtered_items_df['INSTOCK'] > 0]
 
@@ -198,22 +197,19 @@ def count_product(selected_product_name, selected_item, conn_str):
             product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
         else:
             product_name = f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
-        
+
         image_url = get_image_url(product_name)
         if image_url:
             st.image(image_url, width=300)
         else:
             st.write("ไม่พบรูปภาพของสินค้า")
-
     else:
         st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
 
-    # Enable quantity and remark input even if there are no products with positive balance
     product_quantity = st.number_input(label='จำนวนสินค้า 🛒', min_value=0, value=st.session_state.product_quantity)
     status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
     condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
     remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
-    #remark = st.text_area('หมายเหตุ 💬 ', value=st.session_state.remark)
     st.markdown("---")
 
     if st.button('👉 Enter'):
