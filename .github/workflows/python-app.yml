@@ -19,13 +19,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.1'  # ระบุเวอร์ชัน Python ที่ต้องการใช้
+        python-version: '3.1'  # Specify the Python version you want to use
 
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r /path/to/requirements.txt  # ระบุเส้นทางที่เก็บ requirements.txt ของคุณที่นี่
+        pip install -r https://github.com/patcharta/count_stock/blob/main/requirements.txt  # Replace with the correct path to your requirements.txt
 
     - name: Check if Streamlit is installed
       run: |
-        pip list | grep streamlit  # ตรวจสอบว่า Streamlit ได้รับการติดตั้งหรือยัง
+        pip list | grep streamlit  # Check if Streamlit is installed
