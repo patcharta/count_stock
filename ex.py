@@ -16,7 +16,7 @@ import time
 st.set_page_config(layout="wide")
 
 # Function to check user credentials
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def check_credentials(username, password):
     user_db = {
         'nui': ('1234', 'regular'),
@@ -35,7 +35,7 @@ def check_credentials(username, password):
         return user_info[1]
     return None
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def get_connection_string(company):
     if company == 'K.G. Corporation Co.,Ltd.':
         server = '61.91.59.134'
@@ -53,7 +53,7 @@ def get_connection_string(company):
     conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server},{port};DATABASE={database};UID={db_username};PWD={db_password}'
     return conn_str
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def save_to_database(product_data, conn_str):
     try:
         remark = product_data.get('Remark', '')
@@ -82,7 +82,7 @@ def save_to_database(product_data, conn_str):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def load_data(selected_product_name, selected_whcid, conn_str):
     query_detail = '''
     SELECT
@@ -112,7 +112,7 @@ def load_data(selected_product_name, selected_whcid, conn_str):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def fetch_products(company):
     conn_str = get_connection_string(company)
     try:
@@ -240,17 +240,22 @@ def main():
     if product_info is not None and not product_info.empty:
         product_info = product_info.iloc[0]
         st.markdown("### Product Information")
-        st.write(f"**Product ID:** {product_info['ITMID']}")
-        st.write(f"**Product Name:** {product_info['NAME_TH']}")
-        st.write(f"**Purchasing UOM:** {product_info['PURCHASING_UOM']}")
-        st.write(f"**Brand:** {product_info['BRAND_NAME']}")
-        st.write(f"**Warehouse:** {product_info['WAREHOUSE_NAME']}")
-        st.write(f"**Batch No.:** {product_info['BATCH_NO']}")
-        st.write(f"**In Stock:** {product_info['INSTOCK']}")
+        
+        # Print out the columns of the DataFrame for debugging purposes
+        st.write("Product Info Columns:", product_info.index.tolist())
+        
+        # Display the available product information
+        st.write(f"**Product ID:** {product_info.get('ITMID', 'N/A')}")
+        st.write(f"**Product Name:** {product_info.get('NAME_TH', 'N/A')}")
+        st.write(f"**Purchasing UOM:** {product_info.get('PURCHASING_UOM', 'N/A')}")
+        st.write(f"**Brand:** {product_info.get('BRAND_NAME', 'N/A')}")
+        st.write(f"**Warehouse:** {product_info.get('WAREHOUSE_NAME', 'N/A')}")
+        st.write(f"**Batch No.:** {product_info.get('BATCH_NO', 'N/A')}")
+        st.write(f"**In Stock:** {product_info.get('INSTOCK', 'N/A')}")
 
-        image_url = get_image_url(product_info['NAME_TH'])
+        image_url = get_image_url(product_info.get('NAME_TH', ''))
         if image_url:
-            st.image(image_url, caption=product_info['NAME_TH'], use_column_width=True)
+            st.image(image_url, caption=product_info.get('NAME_TH', ''), use_column_width=True)
 
         st.markdown("### Count Stock")
         with st.form(key="count_form"):
@@ -266,13 +271,13 @@ def main():
                 product_data = {
                     'Time': datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%Y-%m-%d %H:%M:%S'),
                     'Enter_By': enter_by,
-                    'Product_ID': product_info['ITMID'],
-                    'Product_Name': product_info['NAME_TH'],
-                    'Purchasing_UOM': product_info['PURCHASING_UOM'],
+                    'Product_ID': product_info.get('ITMID', 'N/A'),
+                    'Product_Name': product_info.get('NAME_TH', 'N/A'),
+                    'Purchasing_UOM': product_info.get('PURCHASING_UOM', 'N/A'),
                     'Remark': remark,
                     'Quantity': quantity,
-                    'Total_Balance': product_info['INSTOCK'],
-                    'whcid': product_info['WHCID'],
+                    'Total_Balance': product_info.get('INSTOCK', 0),
+                    'whcid': product_info.get('WHCID', 'N/A'),
                     'Condition': condition,
                     'Status': status,
                 }
