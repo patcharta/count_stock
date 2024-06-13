@@ -8,4 +8,10 @@ beautifulsoup4
 requests
 opencv-python-headless
 streamlit-camera-input-live
-zbar-py
+libgl1
+libzbar0
+libzbar-dev
+libsm6
+libxrender1
+libfontconfig1
+libice6
