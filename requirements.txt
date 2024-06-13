@@ -6,5 +6,5 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-git+https://github.com/mchehab/zbar
+zbar
 opencv-python-headless
