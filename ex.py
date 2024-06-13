@@ -203,8 +203,8 @@ def count_product(selected_product_name, selected_item, conn_str):
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
         filtered_items_df_positive_balance = filtered_items_df[filtered_items_df['INSTOCK'] > 0]
 
-        display
-                display_columns = ['Location', 'BATCH_NO']
+        
+        display_columns = ['Location', 'BATCH_NO']
         if st.session_state.user_role == 'special':
             display_columns.append('INSTOCK')
 
