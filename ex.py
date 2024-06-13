@@ -147,9 +147,9 @@ def select_product(company, conn_str):
 
     selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
-    # QR code scanning section
-    st.write("หรือ Scan QR Code เพื่อค้นหาสินค้า:")
-    camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+    # Barcode scanning section
+    st.write("หรือ Scan บาร์โค้ด เพื่อค้นหาสินค้า:")
+    camera = st.camera_input("Scan Your Barcode Here", key="camerabarcode", help="Place barcode inside the frame.")
     
     if camera is not None:
         try:
@@ -158,29 +158,43 @@ def select_product(company, conn_str):
             frame = np.array(img)
             if frame.dtype != np.uint8:
                 frame = frame.astype(np.uint8)
+                
+            # Initialize the barcode detector (replace with appropriate library)
+            scanner = zbar.ImageScanner()
+            scanner.parse_config('enable')
+            
+            # Convert image to grayscale
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            qr_detector = cv2.QRCodeDetector()
-            retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)
+            
+            # Wrap image data in a zbar image
+            height, width = gray.shape
+            raw = gray.data.tobytes()
+            image = zbar.Image(width, height, 'Y800', raw)
+            
+            # Scan the image for barcodes
+            scanner.scan(image)
+            
+            # Extract results
+            for symbol in image:
+                if symbol.type == zbar.Symbol.EAN13 or symbol.type == zbar.Symbol.UPCA:
+                    barcode_data = symbol.data.decode('utf-8')
+                    st.write(f"Barcode Detected: {barcode_data}")
 
-            if retval:
-                for code in decoded_info:
-                    qr_data = code  # No need to decode, already a string
-                    st.write(f"QR Code Detected: {qr_data}")
-
-                    # Assuming QR code contains product ID or name
-                    matching_products = items_df[items_df['ITMID'].str.contains(qr_data)]
+                    # Assuming barcode contains product ID or name
+                    matching_products = items_df[items_df['ITMID'].str.contains(barcode_data)]
                     if not matching_products.empty:
                         selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
                         st.write(f"Matching Product: {selected_product_name}")
                         return selected_product_name, matching_products.iloc[0]
-            else:
-                st.write("No QR code detected.")
-
-        except cv2.error as e:
-            st.error(f"OpenCV Error: {e}")
+            
+            # Clean up
+            del(image)
+        
+        except zbar.ZBarSymbolSet as e:
+            st.error(f"ZBar Error: {e}")
 
         except Exception as e:
-            st.error(f"Error processing QR code: {e}")
+            st.error(f"Error processing barcode: {e}")
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
