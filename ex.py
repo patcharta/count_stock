@@ -150,7 +150,7 @@ def select_product(company, conn_str):
     # QR code scanning section
     st.write("หรือ Scan QR Code เพื่อค้นหาสินค้า:")
     camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
-   if camera is not None:
+    if camera is not None:
        try:
             # Read the camera input as an image
             img = Image.open(camera)
