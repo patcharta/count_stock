@@ -1,9 +1,8 @@
 streamlit
-opencv-python-headless
-streamlit-webrtc
-requests
-beautifulsoup4
 pandas
-pyodbc
-pytz
 numpy
+pyodbc
+pycryptodome
+configparser
+beautifulsoup4
+requests
