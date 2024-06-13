@@ -3,7 +3,6 @@ opencv-python-headless
 streamlit-webrtc
 pyzbar
 requests
-beautifulsoup4
 pandas
 pyodbc
 pytz
