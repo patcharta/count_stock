@@ -1,3 +1,0 @@
-git add Dockerfile requirements.txt
-git commit -m "Add Dockerfile for libgl1-mesa-glx and dependencies"
-git push origin main
