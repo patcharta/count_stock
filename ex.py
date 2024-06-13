@@ -118,17 +118,27 @@ def fetch_products(company):
     try:
         with pyodbc.connect(conn_str) as conn:
             product_query = '''
-            SELECT x.ITMID, x.NAME_TH, x.MODEL, x.EDITDATE, q.BRAND_NAME
+            SELECT x.ITMID, x.NAME_TH, x.MODEL, x.EDITDATE, q.BRAND_NAME, p.WHCID
             FROM ERP_ITEM_MASTER_DATA x
             LEFT JOIN ERP_BRAND q ON x.BRAID = q.BRAID
+            LEFT JOIN ERP_GOODS_RECEIPT_PO_BATCH p ON x.ITMID = p.ITMID  -- Adjusted join condition if needed
             WHERE x.EDITDATE IS NULL AND x.GRPID IN ('11', '71', '77', '73', '76', '75')
             '''
             items_df = pd.read_sql(product_query, conn)
+        
+        if items_df.empty:
+            st.warning("No products found.")
+            return pd.DataFrame(columns=['ITMID', 'NAME_TH', 'MODEL', 'EDITDATE', 'BRAND_NAME', 'WHCID'])  # Return empty DataFrame with correct columns
+
         return items_df.fillna('')
+    
     except pyodbc.Error as e:
         st.error(f"Error fetching products: {e}")
+        return pd.DataFrame(columns=['ITMID', 'NAME_TH', 'MODEL', 'EDITDATE', 'BRAND_NAME', 'WHCID'])  # Return empty DataFrame with correct columns
+    
     except Exception as e:
         st.error(f"Unexpected error: {e}")
+        return pd.DataFrame(columns=['ITMID', 'NAME_TH', 'MODEL', 'EDITDATE', 'BRAND_NAME', 'WHCID'])  # Return empty DataFrame with correct columns
 
 def select_product(company):
     st.write("ค้นหาสินค้า 🔎")
