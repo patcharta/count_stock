@@ -247,7 +247,7 @@ def count_product(selected_product_name, selected_item, conn_str):
             
             # Assuming QR code contains product ID or name
             # You can adjust this part based on your actual QR code content
-            matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
+                    matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
                     if not matching_products.empty:
                         selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
                         st.write(f"Matching Product: {selected_product_name}")
