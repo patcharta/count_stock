@@ -1,11 +1,10 @@
 streamlit
-pandas
-numpy
 pyodbc
-pycryptodome
-configparser
-beautifulsoup4
+pandas
 requests
-pyzbar
+beautifulsoup4
 opencv-python-headless
-streamlit-camera-input-live
+numpy
+pytz
+pillow
+
