@@ -172,7 +172,7 @@ def select_product(company, conn_str):
                     selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
                     st.write(f"Matching Product: {selected_product_name}")
                     return selected_product_name, matching_products.iloc[0]
-        else:
+    else:
             st.write("No QR code detected.")
 
     except cv2.error as e:
