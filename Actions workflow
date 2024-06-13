@@ -1,23 +1,31 @@
-name: Build and Test Docker Image
+name: Python application
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - uses: actions/checkout@v2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.1'  # ระบุเวอร์ชัน Python ที่ต้องการใช้
 
-      - name: Build the Docker image
-        run: docker build -t my-python-app .
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r /path/to/requirements.txt  # ระบุเส้นทางที่เก็บ requirements.txt ของคุณที่นี่
 
-      - name: Run tests
-        run: docker run my-python-app pytest
+    - name: Check if Streamlit is installed
+      run: |
+        pip list | grep streamlit  # ตรวจสอบว่า Streamlit ได้รับการติดตั้งหรือยัง
