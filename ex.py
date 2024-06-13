@@ -2,7 +2,6 @@ import pyodbc
 import pandas as pd
 import streamlit as st
 from datetime import datetime
-import time
 import pytz
 import requests
 from bs4 import BeautifulSoup
@@ -11,9 +10,6 @@ import os
 from PIL import Image
 import cv2
 import numpy as np
-from io import BytesIO
-
-from pyzbar.pyzbar import decode as decode_barcode
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -157,6 +153,40 @@ def select_product(company):
     else:
         return None, None
 
+# QR code scanning section
+    st.write("Scan QR Code to Search Product:")
+    camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+    if camera is not None:
+        try:
+            frame = np.array(camera)
+            if frame.dtype != np.uint8:
+                frame = frame.astype(np.uint8)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            qr_detector = cv2.QRCodeDetector()
+            retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
+        
+            if retval:
+                for code in decoded_info:
+                    qr_data = code.decode('utf-8')
+                    st.write(f"QR Code Detected: {qr_data}")
+            
+            # Assuming QR code contains product ID or name
+            # You can adjust this part based on your actual QR code content
+                    matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
+                    if not matching_products.empty:
+                        selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                        st.write(f"Matching Product: {selected_product_name}")
+                        count_product(selected_product_name, matching_products.iloc[0], conn_str)
+            else:
+                st.write("No QR code detected.")
+    
+        except cv2.error as e:
+            st.error(f"OpenCV Error: {e}")
+    
+        except Exception as e:
+            st.error(f"Error processing QR code: {e}")
+
+
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
@@ -173,27 +203,6 @@ def get_image_url(product_name):
         st.error(f"Error fetching image: {e}")
         return None
 
-def scan_barcode(image_url):
-    try:
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-
-        # Convert PIL image to OpenCV format
-        cv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-
-        # Find and decode barcodes
-        barcodes = decode_barcode(cv_img)
-
-        if barcodes:
-            for barcode in barcodes:
-                barcode_data = barcode.data.decode('utf-8')
-                st.write(f"Detected Barcode: {barcode_data}")
-        else:
-            st.write("No barcodes found in the image.")
-
-    except Exception as e:
-        st.error(f"Error scanning barcode: {e}")
-
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
     total_balance = 0
@@ -203,7 +212,6 @@ def count_product(selected_product_name, selected_item, conn_str):
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
         filtered_items_df_positive_balance = filtered_items_df[filtered_items_df['INSTOCK'] > 0]
 
-        
         display_columns = ['Location', 'BATCH_NO']
         if st.session_state.user_role == 'special':
             display_columns.append('INSTOCK')
