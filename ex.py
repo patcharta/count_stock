@@ -160,20 +160,22 @@ st.write("Scan QR Code to Search Product:")
 camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
 if camera is not None:
     try:
-        frame = np.array(camera)
+        # Read the camera input as an image
+        img = Image.open(camera)
+        frame = np.array(img)
         if frame.dtype != np.uint8:
             frame = frame.astype(np.uint8)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         qr_detector = cv2.QRCodeDetector()
-        retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
+        retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)
     
         if retval:
             for code in decoded_info:
-                qr_data = code.decode('utf-8')
+                qr_data = code  # No need to decode, already a string
                 st.write(f"QR Code Detected: {qr_data}")
         
-        # Assuming QR code contains product ID or name
-        # You can adjust this part based on your actual QR code content
+                # Assuming QR code contains product ID or name
+                # You can adjust this part based on your actual QR code content
                 matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
                 if not matching_products.empty:
                     selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
