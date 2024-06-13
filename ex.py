@@ -355,4 +355,4 @@ def app():
         login_section()
 
 if __name__ == "__main__":
-    app()โ
+    app()
