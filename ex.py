@@ -11,6 +11,7 @@ import os
 from PIL import Image
 import cv2
 from pyzbar.pyzbar import decode
+import numpy as np
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -189,12 +190,13 @@ def count_product(selected_product_name, selected_item, conn_str):
             st.dataframe(filtered_items_df_positive_balance)
             if 'INSTOCK' in display_columns:
                 total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
-                st.write(f"รวมยอดสินค้าในคลัง: {total_balance}")
+                st.write(f"ยอดรวมคงเหลือทั้งหมด: {total_balance}")
         else:
-            st.write("ไม่มีสินค้าที่มียอดเหลือในคลัง")
+            st.warning("ไม่พบข้อมูลสินค้าที่มียอดคงเหลือในคลัง")
 
-        if not filtered_items_df.empty:
-            product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
+        with st.expander("ดูรูปภาพสินค้า"):
+            product_name = selected_item['NAME_TH'].values[0]
+            st.write(f"ค้นหารูปภาพ: {product_name}")
             image_url = get_image_url(product_name)
             if image_url:
                 st.image(image_url, caption=product_name, use_column_width=True)
@@ -223,25 +225,31 @@ def count_product(selected_product_name, selected_item, conn_str):
 
 def qr_code_scanner(company):
     st.write("QR Code Scanner")
-    uploaded_file = st.file_uploader("Upload a QR Code image", type=['png', 'jpg', 'jpeg'])
-    conn_str = get_connection_string(company)
-
-    if uploaded_file is not None:
-        try:
-            image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image", use_column_width=True)
-            image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            barcodes = decode(image)
-
-            if barcodes:
-                for barcode in barcodes:
-                    barcode_data = barcode.data.decode("utf-8")
-                    st.write(f"QR Code Data: {barcode_data}")
-                    st.session_state.selected_product, _ = select_product(company)
-            else:
-                st.error("No QR Code found in the image")
-        except Exception as e:
-            st.error(f"Error processing the image: {e}")
+    
+    run_scanner = st.checkbox("เริ่มการสแกนบาร์โค้ด")
+    
+    if run_scanner:
+        cap = cv2.VideoCapture(0)
+        stframe = st.empty()
+        
+        while run_scanner:
+            ret, frame = cap.read()
+            if not ret:
+                st.error("ไม่สามารถเข้าถึงกล้องได้")
+                break
+            
+            barcodes = decode(frame)
+            for barcode in barcodes:
+                barcode_data = barcode.data.decode("utf-8")
+                st.write(f"QR Code Data: {barcode_data}")
+                st.session_state.selected_product, _ = select_product(company)
+                x, y, w, h = barcode.rect
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            
+            stframe.image(frame, channels="BGR", use_column_width=True)
+        
+        cap.release()
+        cv2.destroyAllWindows()
 
 def main():
     if 'login_status' not in st.session_state:
