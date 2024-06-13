@@ -183,27 +183,9 @@ def select_product(company, conn_str):
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
-        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-        st.markdown("---")
         return selected_product_name, selected_item
-    else:
-        return None, None
 
-def get_image_url(product_name):
-    try:
-        query = "+".join(product_name.split())
-        url = f"https://www.google.com/search?tbm=isch&q={query}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
-        }
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        image_element = soup.find("img", {"src": re.compile("https://.*")})
-        image_url = image_element["src"] if image_element else None
-        return image_url
-    except Exception as e:
-        st.error(f"Error fetching image: {e}")
-        return None
+    return None, None
 
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
@@ -289,80 +271,37 @@ def count_product(selected_product_name, selected_item, conn_str):
             del st.session_state['selected_product']
             st.experimental_rerun()
 
-def login_section():
-    st.write("## Login 🚚")
+# Main function to run the app
+def main():
+    if 'username' not in st.session_state:
+        st.session_state.username = ''
+    if 'company' not in st.session_state:
+        st.session_state.company = ''
+
+    st.title("Inventory Count App")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-    company_options = ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.']
-    company = st.selectbox("Company", options=company_options)
-    if st.button(" 📥 Login"):
-        # Set the selected company to the session state
-        st.session_state.company = company
-        # Get the connection string based on the selected company
-        conn_str = get_connection_string(company)
-        user_role = check_credentials(username, password)
-        if user_role:
-            st.session_state.logged_in = True
+    login_button = st.button("Login")
+
+    if login_button:
+        user_type = check_credentials(username, password)
+        if user_type:
             st.session_state.username = username
-            st.session_state.user_role = user_role
-            st.success(f"🎉🎉 Welcome {username}")
-            time.sleep(1)
-            st.experimental_rerun()
+            st.session_state.user_type = user_type
+            st.session_state.company = 'K.G. Corporation Co.,Ltd.'  # or set dynamically if needed
+            st.success("Login successful!")
         else:
             st.error("Invalid username or password")
 
-def main_section():
-    st.write(f"👨🏻‍💼👩🏻‍💼 รายการสินค้าที่ {st.session_state.username.upper()} นับ")
-    st.write(f"🏭🏭 {st.session_state.company}")
-
-    if st.session_state.selected_whcid is None:
-        st.write("เลือก WHCID")
+    if st.session_state.username:
+        st.header(f"Welcome, {st.session_state.username}")
+        st.write(f"Logged in as: {st.session_state.user_type}")
         conn_str = get_connection_string(st.session_state.company)
-        try:
-            with pyodbc.connect(conn_str) as conn:
-                whcid_query = '''
-                SELECT y.WHCID, y.NAME_TH
-                FROM ERP_WAREHOUSES_CODE y
-                WHERE y.EDITDATE IS NULL
-                '''
-                whcid_df = pd.read_sql(whcid_query, conn)
-                selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
-                if st.button("👉 Enter WHCID"):
-                    st.session_state.selected_whcid = selected_whcid
-                    st.experimental_rerun()
-        except pyodbc.Error as e:
-            st.error(f"Error connecting to the database: {e}")
-    else:
-        st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
-        st.markdown("---")
-        selected_product_name, selected_item = select_product(st.session_state.company)
-        if selected_product_name:
-            conn_str = get_connection_string(st.session_state.company)
-            count_product(selected_product_name, selected_item, conn_str)
-        if st.button('📤 Logout'):
-            st.session_state.logged_in = False
-            st.session_state.username = ''
-            st.session_state.selected_whcid = None
-            st.session_state.selected_product_name = None
-            st.session_state.product_data = []
-            st.session_state.product_quantity = 0
-            st.session_state.remark = ""
-            st.experimental_rerun()
-
-def app():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.username = ''
-        st.session_state.selected_whcid = None
-        st.session_state.selected_product_name = None
-        st.session_state.product_data = []
-        st.session_state.product_quantity = 0
-        st.session_state.remark = ""
-
-    if st.session_state.logged_in:
-        main_section()
-    else:
-        login_section()
+        selected_product_name, selected_item = select_product(st.session_state.company, conn_str)
+        if selected_product_name and not selected_item.empty:
+            count_product(selected_item, conn_str)
+        else:
+            st.warning("No product selected or QR code not matched.")
 
 if __name__ == "__main__":
-    app()
+    main()
