@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x'  # ระบุเวอร์ชัน Python ที่ต้องการใช้
+        python-version: '3.1'  # ระบุเวอร์ชัน Python ที่ต้องการใช้
 
     - name: Install dependencies
       run: |
