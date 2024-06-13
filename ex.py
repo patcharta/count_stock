@@ -7,7 +7,7 @@ import pytz
 import requests
 from bs4 import BeautifulSoup
 import re
-from pyzbar.pyzbar import decode
+from streamlit_qrcode_scanner import qrcode_scanner  
 from PIL import Image
 
 # Set page configuration
