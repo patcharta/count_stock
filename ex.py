@@ -10,13 +10,13 @@ import os
 from PIL import Image
 import cv2
 import numpy as np
-import time 
+import time
 
 # Set page configuration
 st.set_page_config(layout="wide")
 
 # Function to check user credentials
-@st.cache_data
+@st.cache(allow_output_mutation=True)
 def check_credentials(username, password):
     user_db = {
         'nui': ('1234', 'regular'),
@@ -35,7 +35,7 @@ def check_credentials(username, password):
         return user_info[1]
     return None
 
-@st.cache_data
+@st.cache(allow_output_mutation=True)
 def get_connection_string(company):
     if company == 'K.G. Corporation Co.,Ltd.':
         server = '61.91.59.134'
@@ -53,6 +53,7 @@ def get_connection_string(company):
     conn_str = f'DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server},{port};DATABASE={database};UID={db_username};PWD={db_password}'
     return conn_str
 
+@st.cache(allow_output_mutation=True)
 def save_to_database(product_data, conn_str):
     try:
         remark = product_data.get('Remark', '')
@@ -81,7 +82,7 @@ def save_to_database(product_data, conn_str):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-@st.cache_data
+@st.cache(allow_output_mutation=True)
 def load_data(selected_product_name, selected_whcid, conn_str):
     query_detail = '''
     SELECT
@@ -111,7 +112,7 @@ def load_data(selected_product_name, selected_whcid, conn_str):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-@st.cache_data
+@st.cache(allow_output_mutation=True)
 def fetch_products(company):
     conn_str = get_connection_string(company)
     try:
@@ -155,39 +156,37 @@ def select_product(company):
         return None, None
 
 # QR code scanning section
-    st.write("Scan QR Code to Search Product:")
-    camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
-    if camera is not None:
-        try:
-            frame = np.array(camera)
-            if frame.dtype != np.uint8:
-                frame = frame.astype(np.uint8)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            qr_detector = cv2.QRCodeDetector()
-            retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
+st.write("Scan QR Code to Search Product:")
+camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+if camera is not None:
+    try:
+        frame = np.array(camera)
+        if frame.dtype != np.uint8:
+            frame = frame.astype(np.uint8)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        qr_detector = cv2.QRCodeDetector()
+        retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
+    
+        if retval:
+            for code in decoded_info:
+                qr_data = code.decode('utf-8')
+                st.write(f"QR Code Detected: {qr_data}")
         
-            if retval:
-                for code in decoded_info:
-                    qr_data = code.decode('utf-8')
-                    st.write(f"QR Code Detected: {qr_data}")
-            
-            # Assuming QR code contains product ID or name
-            # You can adjust this part based on your actual QR code content
-                    matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
-                    if not matching_products.empty:
-                        selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
-                        st.write(f"Matching Product: {selected_product_name}")
-                        count_product(selected_product_name, matching_products.iloc[0], conn_str)
-            else:
-                st.write("No QR code detected.")
+        # Assuming QR code contains product ID or name
+        # You can adjust this part based on your actual QR code content
+                matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
+                if not matching_products.empty:
+                    selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                    st.write(f"Matching Product: {selected_product_name}")
+                    count_product(selected_product_name, matching_products.iloc[0], conn_str)
+        else:
+            st.write("No QR code detected.")
     
-        except cv2.error as e:
-            st.error(f"OpenCV Error: {e}")
+    except cv2.error as e:
+        st.error(f"OpenCV Error: {e}")
     
-        except Exception as e:
-            st.error(f"Error processing QR code: {e}")
-
-
+    except Exception as e:
+        st.error(f"Error processing QR code: {e}")
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
