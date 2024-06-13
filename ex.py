@@ -240,26 +240,26 @@ def count_product(selected_product_name, selected_item, conn_str):
             qr_detector = cv2.QRCodeDetector()
             retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
         
-        if retval:
-            for code in decoded_info:
-                qr_data = code.decode('utf-8')
-                st.write(f"QR Code Detected: {qr_data}")
+            if retval:
+                for code in decoded_info:
+                    qr_data = code.decode('utf-8')
+                    st.write(f"QR Code Detected: {qr_data}")
             
             # Assuming QR code contains product ID or name
             # You can adjust this part based on your actual QR code content
             matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
-            if not matching_products.empty:
-                selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
-                st.write(f"Matching Product: {selected_product_name}")
-                count_product(selected_product_name, matching_products.iloc[0], conn_str)
-        else:
-            st.write("No QR code detected.")
+                    if not matching_products.empty:
+                        selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                        st.write(f"Matching Product: {selected_product_name}")
+                        count_product(selected_product_name, matching_products.iloc[0], conn_str)
+            else:
+                st.write("No QR code detected.")
     
-    except cv2.error as e:
-        st.error(f"OpenCV Error: {e}")
+        except cv2.error as e:
+            st.error(f"OpenCV Error: {e}")
     
-    except Exception as e:
-        st.error(f"Error processing QR code: {e}")
+        except Exception as e:
+            st.error(f"Error processing QR code: {e}")
 
 def main():
     if "logged_in" not in st.session_state:
