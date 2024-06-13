@@ -202,7 +202,7 @@ def select_product(company, conn_str):
         return selected_product_name, selected_item
 
     return None, None
-
+    
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
