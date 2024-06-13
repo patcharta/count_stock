@@ -317,9 +317,10 @@ def main_section():
     else:
         st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
         st.markdown("---")
-        selected_product_name, selected_item = select_product(st.session_state.company)
+        # Pass both company and conn_str to select_product function
+        conn_str = get_connection_string(st.session_state.company)
+        selected_product_name, selected_item = select_product(st.session_state.company, conn_str)
         if selected_product_name:
-            conn_str = get_connection_string(st.session_state.company)
             count_product(selected_product_name, selected_item, conn_str)
         if st.button('📤 Logout'):
             st.session_state.logged_in = False
