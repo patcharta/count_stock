@@ -336,10 +336,49 @@ def main_section():
     else:
         st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
         st.markdown("---")
+
         selected_product_name, selected_item = select_product(st.session_state.company)
+
         if selected_product_name:
             conn_str = get_connection_string(st.session_state.company)
+            filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)  # Load data before QR code detection
+
+            # QR code scanning section
+            st.write("Scan QR Code to Search Product:")
+            camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+            if camera is not None:
+                try:
+                    # Read the camera input as an image
+                    img = Image.open(camera)
+                    frame = np.array(img)
+                    if frame.dtype != np.uint8:
+                        frame = frame.astype(np.uint8)
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    qr_detector = cv2.QRCodeDetector()
+                    retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)
+
+                    if retval:
+                        for code in decoded_info:
+                            qr_data = code  # No need to decode, already a string
+                            st.write(f"QR Code Detected: {qr_data}")
+
+                            # Assuming QR code contains product ID or name
+                            matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
+                            if not matching_products.empty:
+                                selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                                st.write(f"Matching Product: {selected_product_name}")
+                                count_product(selected_product_name, matching_products.iloc[0], conn_str)
+                    else:
+                        st.write("No QR code detected.")
+
+                except cv2.error as e:
+                    st.error(f"OpenCV Error: {e}")
+
+                except Exception as e:
+                    st.error(f"Error processing QR code: {e}")
+
             count_product(selected_product_name, selected_item, conn_str)
+
         if st.button('📤 Logout'):
             st.session_state.logged_in = False
             st.session_state.username = ''
