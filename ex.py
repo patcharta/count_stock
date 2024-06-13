@@ -230,6 +230,28 @@ def count_product(selected_product_name, selected_item, conn_str):
             }
             save_to_database(product_data, conn_str)
 
+    # QR code scanning section
+    st.write("Scan QR Code to Search Product:")
+    camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+    if camera is not None:
+        frame = np.array(camera)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        qr_code = decode(gray)
+        
+        if qr_code:
+            qr_data = qr_code[0].data.decode('utf-8')
+            st.write(f"QR Code Detected: {qr_data}")
+            
+            # Assuming QR code contains product ID or name
+            # You can adjust this part based on your actual QR code content
+            matching_products = filtered_items_df[filtered_items_df['ITMID'].str.contains(qr_data)]
+            if not matching_products.empty:
+                selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                st.write(f"Matching Product: {selected_product_name}")
+                count_product(selected_product_name, matching_products.iloc[0], conn_str)
+        else:
+            st.write("No QR code detected.")
+
 def main():
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
