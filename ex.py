@@ -172,14 +172,14 @@ def select_product(company, conn_str):
                     selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
                     st.write(f"Matching Product: {selected_product_name}")
                     return selected_product_name, matching_products.iloc[0]
-    else:
-        st.write("No QR code detected.")
+        else:
+            st.write("No QR code detected.")
 
-    except cv2.error as e:
-        st.error(f"OpenCV Error: {e}")
+        except cv2.error as e:
+            st.error(f"OpenCV Error: {e}")
 
-    except Exception as e:
-        st.error(f"Error processing QR code: {e}")
+        except Exception as e:
+            st.error(f"Error processing QR code: {e}")
         
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
