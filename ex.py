@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
-from pyzbar.pyzbar import decode
+#from pyzbar.pyzbar import decode
 import numpy as np
 
 # Set page configuration
