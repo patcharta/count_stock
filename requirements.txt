@@ -6,4 +6,4 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-pyzbar
+pyzbar==0.1.8
