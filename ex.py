@@ -11,6 +11,7 @@ from PIL import Image
 import cv2
 import numpy as np
 import time
+import zbar
 
 # Set page configuration
 st.set_page_config(layout="wide")
