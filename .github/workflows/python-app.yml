@@ -1,0 +1,31 @@
+name: Python application
+
+on:
+  push:
+    branches:
+      - main  # กำหนด branch ที่ต้องการให้ทำงานเมื่อ push ขึ้น GitHub
+  pull_request:
+    branches:
+      - main  # กำหนด branch ที่ต้องการให้ทำงานเมื่อมี pull request เข้ามาที่ main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2  # ดึงโค้ดล่าสุดจาก repository ของเรา
+
+    - name: Set up Python  # ตั้งค่า Python version
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'  # กำหนดเวอร์ชัน Python ที่ต้องการใช้
+
+    - name: Install dependencies  # ติดตั้ง dependencies จาก requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Streamlit app  # รันแอปพลิเคชัน Streamlit
+      run: |
+        streamlit run ex.py --server.port $PORT  # ปรับปรุงพอร์ตของเซิร์ฟเวอร์ตามที่ต้องการ
