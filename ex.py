@@ -236,6 +236,8 @@ def count_product(selected_product_name, selected_item, conn_str):
     if camera is not None:
         try:
             frame = np.array(camera)
+            if frame.dtype != np.uint8:
+                frame = frame.astype(np.uint8)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             qr_detector = cv2.QRCodeDetector()
             retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)  
