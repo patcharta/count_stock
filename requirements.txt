@@ -6,4 +6,5 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-pyzbar==0.1.8
+pyzbar
+opencv-python-headless
