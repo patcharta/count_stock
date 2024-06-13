@@ -1,3 +1,4 @@
+# Other packages from your requirements.txt
 streamlit
 pandas
 numpy
@@ -6,6 +7,6 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-pyzbar
-opencv-python-headless
-https://github.com/mchehab/zbar
+
+# Install zbar from GitHub repository
+git+https://github.com/mchehab/zbar
