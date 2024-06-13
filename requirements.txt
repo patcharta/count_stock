@@ -8,3 +8,4 @@ beautifulsoup4
 requests
 pyzbar
 opencv-python-headless
+https://github.com/mchehab/zbar
