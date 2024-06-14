@@ -11,7 +11,7 @@ from PIL import Image
 import numpy as np
 import time
 import cv2
-from pyzbar.pyzbar import decode
+import asposebarcode
 # Set page configuration
 st.set_page_config(layout="wide")
 
