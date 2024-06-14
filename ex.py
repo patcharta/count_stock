@@ -35,9 +35,9 @@ def main():
     camera = st.camera_input("Scan Your Barcode Here", key="webcam")
 
     if camera is not None:
-        # Convert the image to OpenCV format (RGB to BGR)
+        # Convert the image to OpenCV format (PIL to BGR)
         frame = np.array(camera)  # Convert PIL image to numpy array
-        frame = cv2.cvtColor(frame[:, :, ::-1], cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
+        frame = frame[:, :, ::-1]  # Convert RGB to BGR
 
         # Scan barcode
         barcode_data = scan_barcode_opencv(frame)
