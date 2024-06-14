@@ -9,3 +9,4 @@ requests
 opencv-python-headless
 streamlit-camera-input-live
 pyzbar
+pillow
