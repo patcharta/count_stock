@@ -10,7 +10,6 @@ import os
 from PIL import Image
 import numpy as np
 import time
-import cv2
 from pyzbar.pyzbar import decode
 
 # Set page configuration
