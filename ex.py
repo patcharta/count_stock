@@ -10,7 +10,7 @@ import os
 from PIL import Image
 import numpy as np
 import time
-import zxing
+import zbar
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -130,6 +130,15 @@ def fetch_products(company):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
+def scan_barcode(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    scanner = zbar.Scanner()
+    results = scanner.scan(gray)
+    if results:
+        barcode_data = results[0].data.decode('utf-8')
+        return barcode_data
+    return None
+
 def select_product(company, conn_str):
     st.write("ค้นหาสินค้า 🔎")
     items_df = fetch_products(company)
@@ -159,18 +168,10 @@ def select_product(company, conn_str):
             if frame.dtype != np.uint8:
                 frame = frame.astype(np.uint8)
                 
-            # Initialize the ZXing barcode reader
-            reader = zxing.BarCodeReader()
+            # Scan the barcode from the frame
+            barcode_data = scan_barcode(frame)
             
-            # Save the image to a temporary file
-            temp_image_path = 'temp_barcode_image.jpg'
-            img.save(temp_image_path)
-
-            # Decode the barcode from the image
-            barcode = reader.decode(temp_image_path)
-            
-            if barcode:
-                barcode_data = barcode.parsed
+            if barcode_data:
                 st.write(f"Barcode Detected: {barcode_data}")
 
                 # Assuming barcode contains product ID or name
@@ -183,6 +184,7 @@ def select_product(company, conn_str):
         except Exception as e:
             st.error(f"Error processing barcode: {e}")
 
+    # Return selected product name and details
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
         return selected_product_name, selected_item
