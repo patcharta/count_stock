@@ -6,6 +6,5 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-opencv-python
-asposebarcode
-pyzbar
+opencv-python-headless
+aspose_barcode_for_python_via_net
