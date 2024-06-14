@@ -7,5 +7,4 @@ configparser
 beautifulsoup4
 requests
 opencv-python
-pyzbar @ a549566ea11eb03622bd4458a1728ffe3f589163
-cache purge
+git+https://github.com/mchehab/zbar.git@a549566ea11eb03622bd4458a1728ffe3f589163
