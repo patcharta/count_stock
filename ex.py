@@ -208,7 +208,7 @@ def count_product(selected_product_name, selected_item, conn_str):
         # Calculate total_balance only if the user is not special (regular)
         total_balance = filtered_items_df['INSTOCK'].sum()
     
-    product_quantity = st.number_input(label='จำนวนสินค้า 🛒', value=st.session_state.product_quantity)
+    product_quantity = st.number_input(label='จำนวนสินค้า 🛒', value=None, value=st.session_state.product_quantity)
     status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
     condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
     remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
