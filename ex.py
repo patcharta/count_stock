@@ -10,7 +10,8 @@ import os
 from PIL import Image
 import numpy as np
 import time
-import zbar
+import cv2
+from pyzbar.pyzbar import decode
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -132,10 +133,10 @@ def fetch_products(company):
 
 def scan_barcode(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    scanner = zbar.Scanner()
-    results = scanner.scan(gray)
-    if results:
-        barcode_data = results[0].data.decode('utf-8')
+    barcodes = decode(gray)
+
+    if barcodes:
+        barcode_data = barcodes[0].data.decode('utf-8')
         return barcode_data
     return None
 
@@ -190,7 +191,6 @@ def select_product(company, conn_str):
         return selected_product_name, selected_item
 
     return None, None
-
 
 def get_image_url(product_name):
     try:
