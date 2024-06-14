@@ -37,6 +37,10 @@ def main():
         # Convert the image to numpy array
         frame = np.array(camera)
 
+        # Ensure the frame has the correct data type and shape
+        if frame.dtype != np.uint8:
+            frame = frame.astype(np.uint8)
+
         # Check if the image is RGB and convert to BGR if needed
         if frame.ndim == 3 and frame.shape[2] == 3:  # Check if the image has 3 channels (RGB)
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
