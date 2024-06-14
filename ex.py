@@ -29,25 +29,20 @@ def main():
     # Instructions
     st.write("Move a barcode in front of your webcam to scan it.")
 
-    # Attempt to access webcam
     try:
-        cap = cv2.VideoCapture(0)
-        if cap.isOpened():
-            ret, frame = cap.read()
-            if ret:
-                # Scan barcode
-                barcode_data = scan_barcode_opencv(frame)
-                if barcode_data:
-                    st.write(f"Barcode Detected: {barcode_data}")
-            else:
-                st.error("Unable to read frame from webcam.")
-        else:
-            st.error("Failed to open webcam. Check if it's being used by another application or if permissions are set correctly.")
-        
-        cap.release()  # Release the capture object
+        # Capture image from webcam
+        camera = st.camera_input("Scan Your Barcode Here", key="webcam", use_video_port=True)
+
+        if camera is not None:
+            # Convert the image to OpenCV format (PIL to BGR)
+            frame = np.array(camera)  # Convert PIL image to numpy array
+            frame = cv2.cvtColor(frame[:, :, ::-1], cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
+
+            # Scan barcode
+            barcode_data = scan_barcode_opencv(frame)
+            if barcode_data:
+                st.write(f"Barcode Detected: {barcode_data}")
 
     except Exception as e:
-        st.error(f"Error accessing webcam: {e}")
+        st.error(f"Error: {e}")
 
-if __name__ == "__main__":
-    main()
