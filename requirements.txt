@@ -9,4 +9,3 @@ requests
 opencv-python
 pyzbar
 Pillow
-libzbar0
