@@ -10,8 +10,9 @@ import os
 from PIL import Image
 import numpy as np
 import time
-import cv2
-import aspose_barcode_for_python_via_net as AsposeBarcode
+import barcode
+from barcode import EAN13
+from barcode.writer import ImageWriter
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -133,12 +134,24 @@ def fetch_products(company):
 
 def scan_barcode(frame):
     try:
-        # Initialize BarCodeReader object
-        reader = AsposeBarcode.BarCodeReader(frame)
+        # Save the frame temporarily as an image file
+        temp_img_path = 'temp_frame.png'
+        cv2.imwrite(temp_img_path, frame)
 
-        # Read barcode
-        while reader.read():
-            return reader.get_code_text()
+        # Use python-barcode to read the barcode
+        with open(temp_img_path, 'rb') as image_file:
+            barcode_img = Image.open(image_file)
+            barcode_result = barcode.decode(barcode_img, symbols=[EAN13])
+
+        # Clean up the temporary file
+        os.remove(temp_img_path)
+
+        # Extract and return the barcode data
+        if barcode_result:
+            return barcode_result[0].data.decode('utf-8')
+        else:
+            st.warning("No barcode detected or decoded.")
+            return None
 
     except Exception as e:
         st.error(f"Error scanning barcode: {e}")
@@ -196,7 +209,7 @@ def select_product(company, conn_str):
         return selected_product_name, selected_item
 
     return None, None
-
+    
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
