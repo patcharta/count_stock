@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+pyodbc
+pycryptodome
+configparser
+beautifulsoup4
+requests
+opencv-python
+asposebarcode
