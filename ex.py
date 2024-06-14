@@ -36,9 +36,9 @@ def main():
     if camera is not None:
         # Convert the image to OpenCV format (PIL to BGR)
         frame = np.array(camera)  # Convert PIL image to numpy array
-        
+
         # Ensure correct color format for OpenCV (RGB to BGR)
-        if frame.shape[2] == 3:  # Check if the image is RGB
+        if len(frame.shape) == 3 and frame.shape[2] == 3:  # Check if the image is RGB
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
 
         # Scan barcode
