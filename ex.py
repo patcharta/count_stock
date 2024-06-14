@@ -30,19 +30,25 @@ def main():
     # Instructions
     st.write("Move a barcode in front of your webcam to scan it.")
 
-    # OpenCV's VideoCapture for webcam
-    cap = cv2.VideoCapture(0)
+    # Attempt to access webcam
+    try:
+        cap = cv2.VideoCapture(0)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                # Scan barcode
+                barcode_data = scan_barcode_opencv(frame)
+                if barcode_data:
+                    st.write(f"Barcode Detected: {barcode_data}")
+            else:
+                st.error("Unable to read frame from webcam.")
+        else:
+            st.error("Failed to open webcam. Check if it's being used by another application or if permissions are set correctly.")
+        
+        cap.release()  # Release the capture object
 
-    if cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            # Scan barcode
-            barcode_data = scan_barcode_opencv(frame)
-            if barcode_data:
-                st.write(f"Barcode Detected: {barcode_data}")
-        cap.release()
-    else:
-        st.error("Unable to access the webcam.")
+    except Exception as e:
+        st.error(f"Error accessing webcam: {e}")
 
 if __name__ == "__main__":
     main()
