@@ -1,6 +1,5 @@
 import streamlit as st
 import cv2
-from PIL import Image
 import numpy as np
 
 # Function to scan barcode using OpenCV
@@ -24,7 +23,7 @@ def scan_barcode_opencv(frame):
 
     return None
 
-# Function to display webcam input
+# Function to display webcam input and scan barcode
 def display_webcam():
     try:
         cap = cv2.VideoCapture(0)
@@ -35,8 +34,11 @@ def display_webcam():
                 st.error("Failed to capture frame from webcam")
                 break
 
+            # Flip the frame horizontally for better user experience
+            frame = cv2.flip(frame, 1)
+
             # Display the frame in Streamlit
-            st.image(frame, channels="BGR", use_column_width=True)
+            st.image(frame, channels="BGR", use_column_width=True, caption='Webcam')
 
             # Scan barcode
             barcode_data = scan_barcode_opencv(frame)
@@ -50,7 +52,10 @@ def display_webcam():
 
 # Streamlit app
 def main():
-    st.title("Barcode Scanner using OpenCV")
+    st.title("Barcode Scanner using OpenCV and Streamlit")
+
+    # Instructions
+    st.write("Move a barcode in front of your webcam to scan it.")
 
     # Display webcam input and scan barcode
     display_webcam()
