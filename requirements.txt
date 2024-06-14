@@ -6,7 +6,5 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-opencv-python-headless
-streamlit-camera-input-live
 opencv-python
 pyzbar
