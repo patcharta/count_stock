@@ -10,9 +10,7 @@ import os
 from PIL import Image
 import numpy as np
 import time
-import barcode
-from barcode import EAN13
-from barcode.writer import ImageWriter
+from kivy_garden.zbarcam import ZBarCam
 
 # Set page configuration
 st.set_page_config(layout="wide")
