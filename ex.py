@@ -46,3 +46,5 @@ def main():
     except Exception as e:
         st.error(f"Error: {e}")
 
+if __name__ == "__main__":
+    main()
