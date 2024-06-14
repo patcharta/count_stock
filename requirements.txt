@@ -6,6 +6,6 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
-opencv-python-headless
+opencv-python
 pyzbar
 Pillow
