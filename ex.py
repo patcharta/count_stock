@@ -8,10 +8,9 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
-import cv2
 import numpy as np
 import time
-import zbar
+import zxing
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -160,39 +159,26 @@ def select_product(company, conn_str):
             if frame.dtype != np.uint8:
                 frame = frame.astype(np.uint8)
                 
-            # Initialize the barcode detector (replace with appropriate library)
-            scanner = zbar.ImageScanner()
-            scanner.parse_config('enable')
+            # Initialize the ZXing barcode reader
+            reader = zxing.BarCodeReader()
             
-            # Convert image to grayscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            
-            # Wrap image data in a zbar image
-            height, width = gray.shape
-            raw = gray.data.tobytes()
-            image = zbar.Image(width, height, 'Y800', raw)
-            
-            # Scan the image for barcodes
-            scanner.scan(image)
-            
-            # Extract results
-            for symbol in image:
-                if symbol.type == zbar.Symbol.EAN13 or symbol.type == zbar.Symbol.UPCA:
-                    barcode_data = symbol.data.decode('utf-8')
-                    st.write(f"Barcode Detected: {barcode_data}")
+            # Save the image to a temporary file
+            temp_image_path = 'temp_barcode_image.jpg'
+            img.save(temp_image_path)
 
-                    # Assuming barcode contains product ID or name
-                    matching_products = items_df[items_df['ITMID'].str.contains(barcode_data)]
-                    if not matching_products.empty:
-                        selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
-                        st.write(f"Matching Product: {selected_product_name}")
-                        return selected_product_name, matching_products.iloc[0]
+            # Decode the barcode from the image
+            barcode = reader.decode(temp_image_path)
             
-            # Clean up
-            del(image)
-        
-        except zbar.ZBarSymbolSet as e:
-            st.error(f"ZBar Error: {e}")
+            if barcode:
+                barcode_data = barcode.parsed
+                st.write(f"Barcode Detected: {barcode_data}")
+
+                # Assuming barcode contains product ID or name
+                matching_products = items_df[items_df['ITMID'].str.contains(barcode_data)]
+                if not matching_products.empty:
+                    selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                    st.write(f"Matching Product: {selected_product_name}")
+                    return selected_product_name, matching_products.iloc[0]
 
         except Exception as e:
             st.error(f"Error processing barcode: {e}")
@@ -202,6 +188,7 @@ def select_product(company, conn_str):
         return selected_product_name, selected_item
 
     return None, None
+
 
 def get_image_url(product_name):
     try:
