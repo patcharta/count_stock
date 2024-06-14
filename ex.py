@@ -1,7 +1,7 @@
 import streamlit as st
 import cv2
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 # Function to scan barcode using OpenCV
 def scan_barcode_opencv(frame):
@@ -36,7 +36,8 @@ def main():
 
     if camera is not None:
         # Convert the image to OpenCV format (RGB to BGR)
-        frame = cv2.cvtColor(np.array(camera), cv2.COLOR_RGB2BGR)
+        frame = np.array(camera)  # Convert PIL image to numpy array
+        frame = cv2.cvtColor(frame[:, :, ::-1], cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
 
         # Scan barcode
         barcode_data = scan_barcode_opencv(frame)
