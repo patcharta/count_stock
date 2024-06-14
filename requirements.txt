@@ -7,4 +7,3 @@ configparser
 beautifulsoup4
 requests
 opencv-python-headless
-python-barcode
