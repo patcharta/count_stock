@@ -34,7 +34,7 @@ def main():
     # Capture image from webcam
     camera = st.camera_input("Scan Your Barcode Here", key="webcam")
 
-    if camera is not None:
+    if camera is not None:  # Check if camera input is not None
         # Convert the image to numpy array
         frame = np.array(camera)
 
@@ -51,5 +51,9 @@ def main():
         if barcode_data:
             st.write(f"Barcode Detected: {barcode_data}")
 
+    else:
+        st.warning("No camera input found. Please check your camera or try again.")
+
+
 if __name__ == "__main__":
-    main()
+    app()
