@@ -11,7 +11,7 @@ from PIL import Image
 import numpy as np
 import time
 import cv2
-import asposebarcode
+import aspose_barcode_for_python_via_net as AsposeBarcode
 # Set page configuration
 st.set_page_config(layout="wide")
 
