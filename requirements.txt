@@ -8,4 +8,4 @@ beautifulsoup4
 requests
 opencv-python
 asposebarcode
-pyzbar
+zbar
