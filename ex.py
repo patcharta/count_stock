@@ -131,15 +131,16 @@ def fetch_products(company):
         st.error(f"Unexpected error: {e}")
 
 def scan_barcode(frame):
-    # Convert the frame to bytes (required by Aspose.BarCode)
-    frame_bytes = cv2.imencode('.jpg', frame)[1].tobytes()
+    try:
+        # Initialize BarCodeReader object
+        reader = AsposeBarcode.BarCodeReader(frame)
 
-    # Initialize BarCodeReader object
-    reader = asposebarcode.BarCodeReader(frame_bytes, asposebarcode.DecodeType.QR)
+        # Read barcode
+        while reader.read():
+            return reader.get_code_text()
 
-    # Read barcode
-    while reader.read():
-        return reader.get_code_text()
+    except Exception as e:
+        st.error(f"Error scanning barcode: {e}")
 
     return None
 
