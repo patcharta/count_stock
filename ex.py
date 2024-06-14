@@ -1,5 +1,6 @@
 import streamlit as st
 import cv2
+import numpy as np
 
 # Function to scan barcode using OpenCV
 def scan_barcode_opencv(frame):
@@ -29,22 +30,18 @@ def main():
     # Instructions
     st.write("Move a barcode in front of your webcam to scan it.")
 
-    try:
-        # Capture image from webcam
-        camera = st.camera_input("Scan Your Barcode Here", key="webcam", use_video_port=True)
+    # Capture image from webcam
+    camera = st.camera_input("Scan Your Barcode Here", key="webcam")
 
-        if camera is not None:
-            # Convert the image to OpenCV format (PIL to BGR)
-            frame = np.array(camera)  # Convert PIL image to numpy array
-            frame = cv2.cvtColor(frame[:, :, ::-1], cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
+    if camera is not None:
+        # Convert the image to OpenCV format (PIL to BGR)
+        frame = np.array(camera)  # Convert PIL image to numpy array
+        frame = cv2.cvtColor(frame[:, :, ::-1], cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
 
-            # Scan barcode
-            barcode_data = scan_barcode_opencv(frame)
-            if barcode_data:
-                st.write(f"Barcode Detected: {barcode_data}")
-
-    except Exception as e:
-        st.error(f"Error: {e}")
+        # Scan barcode
+        barcode_data = scan_barcode_opencv(frame)
+        if barcode_data:
+            st.write(f"Barcode Detected: {barcode_data}")
 
 if __name__ == "__main__":
     main()
