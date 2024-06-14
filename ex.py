@@ -1,6 +1,7 @@
 import streamlit as st
 import cv2
 import numpy as np
+from PIL import Image
 
 # Function to scan barcode using OpenCV
 def scan_barcode_opencv(frame):
