@@ -7,5 +7,4 @@ configparser
 beautifulsoup4
 requests
 opencv-python
-pyzbar
-Pillow
+asposebarcode
