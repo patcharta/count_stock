@@ -128,50 +128,40 @@ def fetch_products(company):
 
 def select_product(company):
     st.write("ค้นหาสินค้า 🔎")
-
     items_df = fetch_products(company)
     items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
 
-    tab1, tab2 = st.tabs(["ค้นหาสินค้าจาก selectbox", "ค้นหาสินค้าจาก QR"])
-
-    with tab1:
-        # Adding CSS for word wrap
-        st.markdown("""
-            <style>
-            .wrap-text .css-1wa3eu0 {
-                white-space: normal !important;
-                overflow-wrap: anywhere;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-        selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
-
-        if selected_product_name:
-            selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
+    # QR code scanner
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        selected_product_name = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product_name.empty:
+            selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
+            selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
             return selected_product_name, selected_item
-        else:
-            return None, None
 
-    with tab2:
-        # QR code scanner
-        qr_code = st.text_input("สแกน QR Code ที่นี่")
-        if qr_code:
-            st.write(f"QR Code detected: {qr_code}")
-            selected_product_name = items_df[items_df['ITMID'] == qr_code]
-            if not selected_product_name.empty:
-                selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
-                selected_item = items_df[items_df['ITMID'] == qr_code]
-                st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-                st.markdown("---")
-                return selected_product_name, selected_item
-            else:
-                st.warning("ไม่พบข้อมูลสินค้าที่ตรงกับ QR code ที่สแกน")
-                return None, None
+    # Adding CSS for word wrap
+    st.markdown("""
+        <style>
+        .wrap-text .css-1wa3eu0 {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
-    return None, None
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
+
+    if selected_product_name:
+        selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
+        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+        st.markdown("---")
+        return selected_product_name, selected_item
+    else:
+        return None, None
 
 def get_image_url(product_name):
     try:
