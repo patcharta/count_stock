@@ -222,7 +222,7 @@ def count_product(selected_product_name, selected_item, conn_str):
         else:
             try:
                 product_quantity = int(product_quantity_str)
-                if product_quantity <= 0:
+                if product_quantity < 0:
                     st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
                 else:
                     timezone = pytz.timezone('Asia/Bangkok')
