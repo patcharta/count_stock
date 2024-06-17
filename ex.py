@@ -262,20 +262,6 @@ def count_product(selected_product_name, selected_item, conn_str):
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
-with col2:
-    st.write("QR Code Scanner 📷")
-    product_code = qrcode_scanner(key="qrcode_scanner")
-
-    if product_code:
-        st.success(f"Scanned product code: {product_code}")
-        items_df = fetch_products(st.session_state.company)
-        selected_product = items_df[items_df['ITMID'] == product_code]
-        if not selected_product.empty:
-            selected_product_name = f"{selected_product['ITMID'].values[0]} - {selected_product['NAME_TH'].values[0]} - {selected_product['MODEL'].values[0]} - {selected_product['BRAND_NAME'].values[0]}"
-            st.session_state.selected_product = selected_product_name
-            st.write(f"Product selected: {selected_product_name}")
-        else:
-            st.error("Product code not found in the database.")
             
 def login_section():
     st.write("## Login 🚚")
