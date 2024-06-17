@@ -7,7 +7,8 @@ import pytz
 import requests
 from bs4 import BeautifulSoup
 import re
-from streamlit_qrcode_scanner import qrcode_scanner
+import os
+from PIL import Image
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -126,48 +127,64 @@ def fetch_products(company):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-def select_product(company):
+def select_product(company, conn_str):
     st.write("ค้นหาสินค้า 🔎")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        items_df = fetch_products(company)
-        items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
+    items_df = fetch_products(company)
+    items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
 
-        # Adding CSS for word wrap
-        st.markdown("""
-            <style>
-            .wrap-text .css-1wa3eu0 {
-                white-space: normal !important;
-                overflow-wrap: anywhere;
-            }
-            </style>
-            """, unsafe_allow_html=True)
+    # Adding CSS for word wrap
+    st.markdown("""
+        <style>
+        .wrap-text .css-1wa3eu0 {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+        </style>
+        """, unsafe_allow_html=True)
 
-        selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
-        if selected_product_name:
-            selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
-            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-            st.markdown("---")
-            return selected_product_name, selected_item  # Correctly placed return statement
-        else:
-            return None, None  # Return None, None if no product is selected
+    # QR code scanning section
+    st.write("หรือ Scan QR Code เพื่อค้นหาสินค้า:")
+    camera = st.camera_input("Scan Your QR Code Here", key="cameraqrcode", help="Place QR code inside the frame.")
+    if camera is not None:
+        try:
+            # Read the camera input as an image
+            img = Image.open(camera)
+            frame = np.array(img)
+            if frame.dtype != np.uint8:
+                frame = frame.astype(np.uint8)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            qr_detector = cv2.QRCodeDetector()
+            retval, decoded_info, points, _ = qr_detector.detectAndDecodeMulti(gray)
 
-    with col2:
-        st.write("QR Code Scanner 📷")
-        product_code = qrcode_scanner(key="qrcode_scanner")
+            if retval:
+                for code in decoded_info:
+                    qr_data = code  # No need to decode, already a string
+                    st.write(f"QR Code Detected: {qr_data}")
 
-        if product_code:
-            st.success(f"Scanned product code: {product_code}")
-            items_df = fetch_products(company)
-            selected_product = items_df[items_df['ITMID'] == product_code]
-            if not selected_product.empty:
-                selected_product_name = f"{selected_product['ITMID'].values[0]} - {selected_product['NAME_TH'].values[0]} - {selected_product['MODEL'].values[0]} - {selected_product['BRAND_NAME'].values[0]}"
-                st.session_state.selected_product = selected_product_name
-                st.write(f"Product selected: {selected_product_name}")
+                    # Assuming QR code contains product ID or name
+                    matching_products = items_df[items_df['ITMID'].str.contains(qr_data)]
+                    if not matching_products.empty:
+                        selected_product_name = matching_products.iloc[0]['ITMID'] + ' - ' + matching_products.iloc[0]['NAME_TH'] + ' - ' + matching_products.iloc[0]['MODEL'] + ' - ' + matching_products.iloc[0]['BRAND_NAME']
+                        st.write(f"Matching Product: {selected_product_name}")
+                        return selected_product_name, matching_products.iloc[0]
             else:
-                st.error("Product code not found in the database.")
+                st.write("No QR code detected.")
+
+        except cv2.error as e:
+            st.error(f"OpenCV Error: {e}")
+
+        except Exception as e:
+            st.error(f"Error processing QR code: {e}")
+
+    if selected_product_name:
+        selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
+        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+        st.markdown("---")
+        return selected_product_name, selected_item
+    else:
+        return None, None
 
 def get_image_url(product_name):
     try:
@@ -271,12 +288,11 @@ def count_product(selected_product_name, selected_item, conn_str):
                     st.session_state.product_quantity = 0
                     st.session_state.remark = ""
                     time.sleep(2)
-                    if 'selected_product' in st.session_state:
-                        del st.session_state['selected_product']
+                    del st.session_state['selected_product']
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
-            
+
 def login_section():
     st.write("## Login 🚚")
     username = st.text_input("Username")
