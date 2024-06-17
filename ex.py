@@ -7,8 +7,7 @@ import pytz
 import requests
 from bs4 import BeautifulSoup
 import re
-import os
-from PIL import Image
+from streamlit_qrcode_scanner import qrcode_scanner
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -144,7 +143,6 @@ def select_product(company):
             st.markdown("---")
             return selected_product_name, selected_item
 
-    
     # Adding CSS for word wrap
     st.markdown("""
         <style>
@@ -154,7 +152,7 @@ def select_product(company):
         }
         </style>
         """, unsafe_allow_html=True)
-    
+
     selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
     if selected_product_name:
