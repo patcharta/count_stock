@@ -149,7 +149,7 @@ with col1:
             selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-            return selected_product_name, selected_item
+            return selected_product_name, selected_item  # Correctly placed return statement
         else:
             return None, None  # Return None, None if no product is selected
 
@@ -164,7 +164,7 @@ with col2:
             selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-            return selected_product_name, selected_item
+            return selected_product_name, selected_item  # Correctly placed return statement
 
 def get_image_url(product_name):
     try:
