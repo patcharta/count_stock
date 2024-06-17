@@ -153,18 +153,7 @@ with col1:
         else:
             return None, None  # Return None, None if no product is selected
 
-with col2:
-    # QR code scanner
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        selected_product_name = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product_name.empty:
-            selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
-            selected_item = items_df[items_df['ITMID'] == qr_code]
-            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-            st.markdown("---")
-            return selected_product_name, selected_item  # Correctly placed return statement
+
 
 def get_image_url(product_name):
     try:
