@@ -213,6 +213,7 @@ def count_product(selected_product_name, selected_item, conn_str):
     if st.button('👉 Enter'):
         if status is None or condition is None:
             st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
+            st.experimental_rerun()  # Refresh the section if fields are not selected
         elif status == "ผสม" and not remark.strip():
             st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
         else:
