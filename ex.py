@@ -141,9 +141,11 @@ def select_product(company):
             selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
+            st.session_state.selected_product = selected_product_name
+            st.session_state.qr_code_scanned = True  # Flag to indicate QR code scanned
             return selected_product_name, selected_item
-
     else:
+        st.session_state.qr_code_scanned = False  # Reset flag if no QR code detected
         return None, None
 
 def get_image_url(product_name):
