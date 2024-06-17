@@ -125,22 +125,13 @@ def fetch_products(company):
         st.error(f"Error fetching products: {e}")
     except Exception as e:
         st.error(f"Unexpected error: {e}")
+
+col1, col2 = st.columns(2)
+with col1:
 def select_product(company):
     st.write("ค้นหาสินค้า 🔎")
     items_df = fetch_products(company)
     items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
-
-    # QR code scanner
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        selected_product_name = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product_name.empty:
-            selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
-            selected_item = items_df[items_df['ITMID'] == qr_code]
-            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-            st.markdown("---")
-            return selected_product_name, selected_item
 
     # Adding CSS for word wrap
     st.markdown("""
@@ -161,6 +152,19 @@ def select_product(company):
         return selected_product_name, selected_item
     else:
         return None, None  # Return None, None if no product is selected
+
+    with col2:
+    # QR code scanner
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        selected_product_name = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product_name.empty:
+            selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
+            selected_item = items_df[items_df['ITMID'] == qr_code]
+            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+            st.markdown("---")
+            return selected_product_name, selected_item
 
 def get_image_url(product_name):
     try:
