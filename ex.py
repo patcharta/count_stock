@@ -265,7 +265,8 @@ def count_product(selected_product_name, selected_item, conn_str):
                     st.session_state.product_quantity = 0
                     st.session_state.remark = ""
                     time.sleep(2)
-                    del st.session_state['selected_product']
+                    if 'selected_product' in st.session_state:
+                        del st.session_state['selected_product']
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
