@@ -126,7 +126,32 @@ def fetch_products(company):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-def select_product(company):
+def select_product_col1(company):
+    st.write("ค้นหาสินค้า 🔎")
+    items_df = fetch_products(company)
+    items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
+
+    # Adding CSS for word wrap
+    st.markdown("""
+        <style>
+        .wrap-text .css-1wa3eu0 {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
+
+    if selected_product_name:
+        selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
+        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+        st.markdown("---")
+        return selected_product_name, selected_item
+    else:
+        return None, None
+
+def select_product_col2(company):
     st.write("ค้นหาสินค้า 🔎")
     items_df = fetch_products(company)
     items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
@@ -142,19 +167,6 @@ def select_product(company):
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
             return selected_product_name, selected_item
-
-    # Adding CSS for word wrap
-    st.markdown("""
-        <style>
-        .wrap-text .css-1wa3eu0 {
-            white-space: normal !important;
-            overflow-wrap: anywhere;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
-    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
-
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
         st.write(f"คุณเลือกสินค้า: {selected_product_name}")
