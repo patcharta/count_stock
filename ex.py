@@ -266,5 +266,6 @@ def main():
                         st.image(image_url, caption=selected_product_name, use_column_width=True)
                     count_product(selected_product_name, selected_item, conn_str)
 
+
 if __name__ == "__main__":
-    main()
+    app()
