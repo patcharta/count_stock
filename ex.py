@@ -126,10 +126,11 @@ def fetch_products(company):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-col1, col2 = st.columns(2)
-with col1:
-    def select_product(company):
-        st.write("ค้นหาสินค้า 🔎")
+def select_product(company):
+    st.write("ค้นหาสินค้า 🔎")
+    col1, col2 = st.columns(2)
+    
+    with col1:
         items_df = fetch_products(company)
         items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
 
@@ -153,7 +154,20 @@ with col1:
         else:
             return None, None  # Return None, None if no product is selected
 
+    with col2:
+        st.write("QR Code Scanner 📷")
+        product_code = qrcode_scanner(key="qrcode_scanner")
 
+        if product_code:
+            st.success(f"Scanned product code: {product_code}")
+            items_df = fetch_products(company)
+            selected_product = items_df[items_df['ITMID'] == product_code]
+            if not selected_product.empty:
+                selected_product_name = f"{selected_product['ITMID'].values[0]} - {selected_product['NAME_TH'].values[0]} - {selected_product['MODEL'].values[0]} - {selected_product['BRAND_NAME'].values[0]}"
+                st.session_state.selected_product = selected_product_name
+                st.write(f"Product selected: {selected_product_name}")
+            else:
+                st.error("Product code not found in the database.")
 
 def get_image_url(product_name):
     try:
