@@ -164,7 +164,7 @@ with col2:
             selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-                return selected_product_name, selected_item  # Correctly placed return statement
+        return selected_product_name, selected_item  # Correctly placed return statement
 
 def get_image_url(product_name):
     try:
