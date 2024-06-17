@@ -157,7 +157,7 @@ def select_product(company):
 
     with tab2:
         # QR code scanner
-        qr_code = qrcode_scanner(key="qr_code_scanner")
+        qr_code = st.text_input("สแกน QR Code ที่นี่")
         if qr_code:
             st.write(f"QR Code detected: {qr_code}")
             selected_product_name = items_df[items_df['ITMID'] == qr_code]
