@@ -183,9 +183,9 @@ def select_product(company):
     search_method = st.radio("",
         ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
 
-    if search_method == "พิมพ์เพื่อค้นหาใน selected_product_name = st.selectbox":
+    if search_method == "พิมพ์เพื่อค้นหา":
         return select_product_by_text(company)
-    elif search_method == "ถ่ายรูป QR เพื่อค้นหา":
+    elif search_method == "QR เพื่อค้นหา":
         return select_product_by_qr(company)
     else:
         return None, None
