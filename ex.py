@@ -117,7 +117,8 @@ def fetch_products(company):
             SELECT x.ITMID, x.NAME_TH, x.MODEL, x.EDITDATE, q.BRAND_NAME
             FROM ERP_ITEM_MASTER_DATA x
             LEFT JOIN ERP_BRAND q ON x.BRAID = q.BRAID
-            WHERE x.EDITDATE IS NULL AND x.GRPID IN ('11', '71', '77', '73', '76', '75')
+            WHERE x.EDITDATE IS NULL AND q.EDITDATE IS NULL AND
+            x.GRPID IN ('11', '71', '77', '73', '76', '75')
             '''
             items_df = pd.read_sql(product_query, conn)
         return items_df.fillna('')
