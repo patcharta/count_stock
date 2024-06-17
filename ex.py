@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 from PIL import Image
+from streamlit_qrcode_scanner import qrcode_scanner
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -129,18 +130,15 @@ def fetch_products(company):
 
 def select_product(company):
     st.write("ค้นหาสินค้า 🔎")
-    
-    # Add QR code scanner
-    qr_code = qrcode_scanner()
-    if qr_code:
-        st.session_state.qr_code = qr_code
-        st.write(f"Scanned QR code: {qr_code}")
-    else:
-        st.session_state.qr_code = None
-
     items_df = fetch_products(company)
     items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
-    
+
+    # QR code scanner
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        items_df = items_df[items_df['ITMID'] == qr_code]
+
     # Adding CSS for word wrap
     st.markdown("""
         <style>
@@ -150,16 +148,8 @@ def select_product(company):
         }
         </style>
         """, unsafe_allow_html=True)
-    
-    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
-    if st.session_state.qr_code:
-        selected_item = items_df[items_df['ITMID'] == st.session_state.qr_code]
-        if not selected_item.empty:
-            selected_product_name = items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME']
-        else:
-            st.warning("QR code does not match any product.")
-            selected_product_name = None
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
@@ -198,158 +188,103 @@ def count_product(selected_product_name, selected_item, conn_str):
         if st.session_state.user_role == 'special':
             display_columns.append('INSTOCK')
 
-        if not filtered_items_df_positive_balance.empty:
-            filtered_items_df_positive_balance = filtered_items_df_positive_balance[display_columns]
-            filtered_items_df_positive_balance.index = range(1, len(filtered_items_df_positive_balance) + 1)
-            st.dataframe(filtered_items_df_positive_balance)
-            if 'INSTOCK' in display_columns:
-                total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
-                st.write(f"รวมยอดสินค้าในคลัง: {total_balance}")
+        if st.session_state.user_role == 'special':
+            st.table(filtered_items_df[display_columns])
         else:
-            st.write("ไม่มีสินค้าที่มียอดเหลือในคลัง")
+            st.table(filtered_items_df_positive_balance[display_columns])
 
-        if not filtered_items_df.empty:
-            product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
+        if st.session_state.user_role == 'special':
+            st.warning("Role: Special, all items shown")
         else:
-            product_name = f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
+            st.warning("Role: Regular, only items with positive balance shown")
 
-        image_url = get_image_url(product_name)
-        if image_url:
-            st.image(image_url, width=300)
-        else:
-            st.write("ไม่พบรูปภาพของสินค้า")
-    else:
-        st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
-
-    if st.session_state.user_role == 'regular' and 'INSTOCK' in filtered_items_df.columns:
         total_balance = filtered_items_df['INSTOCK'].sum()
+    else:
+        st.write("ไม่พบข้อมูลสินค้าที่เลือก")
 
-    # Using text input to accept quantity as string
-    product_quantity_str = st.text_input(label='จำนวนสินค้า 🛒', value="")
-    status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
-    condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
-    remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
-    st.markdown("---")
+    st.session_state.enter_by = st.text_input("Enter by:", value="", placeholder="Enter your name")
+    product_id = selected_item.iloc[0]['ITMID']
+    product_name = selected_item.iloc[0]['NAME_TH']
+    purchasing_uom = selected_item.iloc[0]['PURCHASING_UOM']
+    model = selected_item.iloc[0]['MODEL']
+    brand_name = selected_item.iloc[0]['BRAND_NAME']
+    whcid = st.session_state.selected_whcid
 
-    if st.button('👉 Enter'):
-        if status is None or condition is None:
-            st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
-        elif status == "ผสม" and not remark.strip():
-            st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
-        else:
-            try:
-                product_quantity = int(product_quantity_str)
-                if product_quantity < 0:
-                    st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
-                else:
-                    timezone = pytz.timezone('Asia/Bangkok')
-                    current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
-                    product_data = {
-                        'Time': current_time,
-                        'Enter_By': st.session_state.username.upper(),
-                        'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
-                        'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
-                        'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
-                        'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
-                        'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                        'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                        'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                        'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
-                        'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
-                        'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
-                        'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
-                        'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
-                        'Quantity': product_quantity,
-                        'Remark': remark,
-                        'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
-                        'Status': status,
-                        'Condition': condition
-                    }
-                    st.session_state.product_data.append(product_data)
-                    save_to_database(product_data, conn_str)
-                    st.session_state.product_data = []
-                    st.session_state.product_quantity = 0
-                    st.session_state.remark = ""
-                    time.sleep(2)
-                    del st.session_state['selected_product']
-                    st.experimental_rerun()
-            except ValueError:
-                st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
+    st.write(f"Product ID: {product_id}")
+    st.write(f"Product Name: {product_name}")
+    st.write(f"Purchasing UOM: {purchasing_uom}")
+    st.write(f"Model: {model}")
+    st.write(f"Brand Name: {brand_name}")
 
-def login_section():
-    st.write("## Login 🚚")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    company_options = ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.']
-    company = st.selectbox("Company", options=company_options)
-    if st.button(" 📥 Login"):
-        # Set the selected company to the session state
-        st.session_state.company = company
-        # Get the connection string based on the selected company
-        conn_str = get_connection_string(company)
-        user_role = check_credentials(username, password)
-        if user_role:
-            st.session_state.logged_in = True
-            st.session_state.username = username
-            st.session_state.user_role = user_role
-            st.success(f"🎉🎉 Welcome {username}")
-            time.sleep(1)
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password")
+    st.write(f"คลังที่เลือก: {whcid}")
+
+    image_url = get_image_url(product_name)
+    if image_url:
+        st.image(image_url, caption=product_name, use_column_width=True)
+    else:
+        st.write("ไม่พบภาพสินค้าที่ต้องการ")
+
+    quantity = st.number_input("กรุณากรอกยอดตรวจนับ:", min_value=0, step=1)
+
+    if st.button("บันทึกข้อมูล"):
+        product_data = {
+            'Time': datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%Y-%m-%d %H:%M:%S'),
+            'Enter_By': st.session_state.enter_by,
+            'Product_ID': product_id,
+            'Product_Name': product_name,
+            'Purchasing_UOM': purchasing_uom,
+            'Remark': '',
+            'Quantity': quantity,
+            'Total_Balance': total_balance,
+            'whcid': whcid,
+            'Status': 'Pending', # Example status
+            'Condition': 'Good' # Example condition
+        }
+        save_to_database(product_data, conn_str)
 
 def main_section():
-    st.write(f"👨🏻‍💼👩🏻‍💼 รายการสินค้าที่ {st.session_state.username.upper()} นับ")
-    st.write(f"🏭🏭 {st.session_state.company}")
-
-    if st.session_state.selected_whcid is None:
-        st.write("เลือก WHCID")
-        conn_str = get_connection_string(st.session_state.company)
-        try:
-            with pyodbc.connect(conn_str) as conn:
-                whcid_query = '''
-                SELECT y.WHCID, y.NAME_TH
-                FROM ERP_WAREHOUSES_CODE y
-                WHERE y.EDITDATE IS NULL
-                '''
-                whcid_df = pd.read_sql(whcid_query, conn)
-                selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
-                if st.button("👉 Enter WHCID"):
-                    st.session_state.selected_whcid = selected_whcid
-                    st.experimental_rerun()
-        except pyodbc.Error as e:
-            st.error(f"Error connecting to the database: {e}")
-    else:
-        st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
-        st.markdown("---")
+    if st.session_state.authenticated:
         selected_product_name, selected_item = select_product(st.session_state.company)
-        if selected_product_name:
-            conn_str = get_connection_string(st.session_state.company)
-            count_product(selected_product_name, selected_item, conn_str)
-        if st.button('📤 Logout'):
-            st.session_state.logged_in = False
-            st.session_state.username = ''
-            st.session_state.selected_whcid = None
-            st.session_state.selected_product_name = None
-            st.session_state.product_data = []
-            st.session_state.product_quantity = 0
-            st.session_state.remark = ""
-            st.experimental_rerun()
+        if selected_product_name and selected_item is not None:
+            count_product(selected_product_name, selected_item, get_connection_string(st.session_state.company))
 
 def app():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.username = ''
-        st.session_state.selected_whcid = None
-        st.session_state.selected_product_name = None
-        st.session_state.product_data = []
-        st.session_state.product_quantity = 0
-        st.session_state.remark = ""
+    st.title("นับสินค้า")
 
-    if st.session_state.logged_in:
-        main_section()
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    if 'user_role' not in st.session_state:
+        st.session_state.user_role = None
+    if 'company' not in st.session_state:
+        st.session_state.company = None
+    if 'selected_whcid' not in st.session_state:
+        st.session_state.selected_whcid = None
+
+    if not st.session_state.authenticated:
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        company = st.selectbox("Company", ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.'])
+        if st.button("Login"):
+            user_role = check_credentials(username, password)
+            if user_role:
+                st.session_state.authenticated = True
+                st.session_state.user_role = user_role
+                st.session_state.company = company
+                st.success("Login successful!")
+            else:
+                st.error("Invalid username or password")
     else:
-        login_section()
+        whcids = {
+            'K.G. Corporation Co.,Ltd.': ['WHCID1 - Warehouse 1', 'WHCID2 - Warehouse 2'],
+            'The Chill Resort & Spa Co., Ltd.': ['WHCID3 - Warehouse 3', 'WHCID4 - Warehouse 4']
+        }
+        st.session_state.selected_whcid = st.selectbox("เลือกคลังสินค้า", whcids[st.session_state.company])
+        if st.button("Logout"):
+            st.session_state.authenticated = False
+            st.session_state.user_role = None
+            st.session_state.company = None
+            st.session_state.selected_whcid = None
+        main_section()
 
 if __name__ == "__main__":
     app()
