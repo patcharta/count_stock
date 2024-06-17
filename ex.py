@@ -129,7 +129,7 @@ def fetch_products(company):
 def select_product(company):
     st.write("ค้นหาสินค้า 🔎")
     items_df = fetch_products(company)
-    items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
+    #items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
 
     # QR code scanner
     qr_code = qrcode_scanner(key="qr_code_scanner")
@@ -141,12 +141,9 @@ def select_product(company):
             selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-            st.session_state.selected_product = selected_product_name
-            st.session_state.qr_code_scanned = True  # Flag to indicate QR code scanned
             return selected_product_name, selected_item
-    else:
-        st.session_state.qr_code_scanned = False  # Reset flag if no QR code detected
-        return None, None
+        else:
+            return None, None
 
 def get_image_url(product_name):
     try:
@@ -213,7 +210,6 @@ def count_product(selected_product_name, selected_item, conn_str):
     if st.button('👉 Enter'):
         if status is None or condition is None:
             st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
-            st.experimental_rerun()  # Refresh the section if fields are not selected
         elif status == "ผสม" and not remark.strip():
             st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
         else:
