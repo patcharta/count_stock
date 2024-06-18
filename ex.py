@@ -169,14 +169,6 @@ def select_product_by_qr(company):
         """, unsafe_allow_html=True)
 
 
-    if selected_product_name:
-        selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
-        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-        st.markdown("---")
-        return selected_product_name, selected_item
-    else:
-        return None, None
-
 def select_product(company):
     st.write("เลือกวิธีค้นหาสินค้า:")
     search_method = st.radio("",
