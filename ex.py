@@ -179,76 +179,91 @@ def select_product_by_qr(company):
         return None, None
 
 def select_product(company):
-    st.write("เลือกวิธีค้นหาสินค้า:")
-    search_method = st.radio("ค้นหาสินค้าด้วย:", ('พิมพ์เพื่อค้นหา', 'ค้นหาด้วย QR Code'))
+    # Example query to fetch items, adjust as needed
+    query = '''
+    SELECT ITMID, NAME_TH, PURCHASING_UOM, INSTOCK, WHCID, WAREHOUSE_NAME
+    FROM PRODUCTS
+    WHERE COMPANY = ?
+    '''
+    conn_str = get_connection_string(company)
+    with pyodbc.connect(conn_str) as conn:
+        items_df = pd.read_sql(query, conn, params=[company])
 
-    if search_method == 'พิมพ์เพื่อค้นหา':
-        selected_product_name, selected_item = select_product_by_text(company)
+    # Print DataFrame columns for debugging
+    st.write("Debug: Items DataFrame")
+    st.write(items_df)
+    st.write("Columns in items_df:", items_df.columns)
+
+    items_options = items_df['NAME_TH'].tolist()
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options)
+
+    if selected_product_name:
+        selected_item = items_df[items_df['NAME_TH'] == selected_product_name]
+        return selected_product_name, selected_item
+    return None, pd.DataFrame()
+
+def main_section():
+    st.write(f"👨🏻‍💼👩🏻‍💼 รายการสินค้าที่ {st.session_state.username.upper()} นับ")
+    st.write(f"🏭🏭 {st.session_state.company}")
+
+    if st.session_state.selected_whcid is None:
+        st.write("เลือก WHCID")
+        conn_str = get_connection_string(st.session_state.company)
+        try:
+            with pyodbc.connect(conn_str) as conn:
+                whcid_query = '''
+                SELECT y.WHCID, y.NAME_TH
+                FROM ERP_WAREHOUSES_CODE y
+                WHERE y.EDITDATE IS NULL
+                '''
+                whcid_df = pd.read_sql(whcid_query, conn)
+                selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
+                if st.button("👉 Enter WHCID"):
+                    st.session_state.selected_whcid = selected_whcid
+                    st.experimental_rerun()
+        except pyodbc.Error as e:
+            st.error(f"Error connecting to the database: {e}")
     else:
-        selected_product_name, selected_item = select_product_by_qr(company)
-
-    return selected_product_name, selected_item
-
-def main():
-    st.title("ระบบตรวจนับสินค้า")
-    st.sidebar.title("Authentication")
-
-    username = st.sidebar.text_input("Username")
-    password = st.sidebar.text_input("Password", type="password")
-    company = st.sidebar.selectbox("เลือกบริษัท", ["K.G. Corporation Co.,Ltd.", "The Chill Resort & Spa Co., Ltd."])
-
-    if st.sidebar.button("Login"):
-        role = check_credentials(username, password)
-        if role:
-            st.sidebar.success(f"Logged in as {username}")
-            st.session_state.logged_in = True
-            st.session_state.username = username
-            st.session_state.company = company
-            st.session_state.role = role
-        else:
-            st.sidebar.error("Invalid username or password")
-
-    if st.session_state.get("logged_in"):
+        st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
+        st.markdown("---")
         selected_product_name, selected_item = select_product(st.session_state.company)
-
         if selected_product_name:
-            # Print the DataFrame to debug
             st.write("Debug: Selected Item DataFrame")
             st.write(selected_item)
             st.write("Columns in selected_item:", selected_item.columns)
 
             conn_str = get_connection_string(st.session_state.company)
 
-            # Update this section with actual column names after debugging
-            # Check if the required columns exist in selected_item
+            # Ensure the required columns exist
             if 'WHCID' in selected_item.columns and 'WAREHOUSE_NAME' in selected_item.columns:
-                selected_whcid = st.selectbox("เลือกคลังสินค้า", options=[f"{row['WHCID']} - {row['WAREHOUSE_NAME']}" for index, row in selected_item.iterrows()])
-
-                if st.button('👉 Enter'):
-                    filtered_items_df = load_data(selected_product_name, selected_whcid, conn_str)
-                    if not filtered_items_df.empty:
-                        product_quantity_str = st.text_input("จำนวนที่นับได้")
-                        status = st.selectbox("สถานะ", ["New", "Used", "Damaged"])
-                        condition = st.selectbox("สภาพ", ["Good", "Fair", "Poor"])
-                        remark = st.text_area("หมายเหตุ")
-
-                        if st.button('บันทึก'):
-                            product_data = {
-                                'Time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                'Enter_By': st.session_state.username,
-                                'Product_ID': selected_item.iloc[0]['ITMID'],
-                                'Product_Name': selected_item.iloc[0]['NAME_TH'],
-                                'Purchasing_UOM': selected_item.iloc[0]['PURCHASING_UOM'],
-                                'Quantity': product_quantity_str,
-                                'Total_Balance': selected_item.iloc[0]['INSTOCK'],
-                                'whcid': selected_item.iloc[0]['WHCID'],
-                                'Status': status,
-                                'Condition': condition,
-                                'Remark': remark
-                            }
-                            save_to_database(product_data, conn_str)
+                count_product(selected_product_name, selected_item, conn_str)
             else:
                 st.error("Selected item DataFrame does not have the required columns 'WHCID' and 'WAREHOUSE_NAME'")
+        
+        if st.button('📤 Logout'):
+            st.session_state.logged_in = False
+            st.session_state.username = ''
+            st.session_state.selected_whcid = None
+            st.session_state.selected_product_name = None
+            st.session_state.product_data = []
+            st.session_state.product_quantity = 0
+            st.session_state.remark = ""
+            st.experimental_rerun()
+
+def app():
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+        st.session_state.username = ''
+        st.session_state.selected_whcid = None
+        st.session_state.selected_product_name = None
+        st.session_state.product_data = []
+        st.session_state.product_quantity = 0
+        st.session_state.remark = ""
+
+    if st.session_state.logged_in:
+        main_section()
+    else:
+        login_section()
 
 if __name__ == "__main__":
-    main()
+    app()
