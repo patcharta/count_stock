@@ -2,11 +2,7 @@ import pyodbc
 import pandas as pd
 import streamlit as st
 from datetime import datetime
-import time
 import pytz
-import requests
-from bs4 import BeautifulSoup
-import re
 from streamlit_qrcode_scanner import qrcode_scanner
 
 # Set page configuration
@@ -68,7 +64,7 @@ def save_to_database(product_data, conn_str):
                 product_data['Product_ID'], product_data['Product_Name'],
                 product_data['Purchasing_UOM'], remark,
                 product_data['Quantity'], product_data['Total_Balance'], product_data['whcid'],
-                product_data['Status'], product_data['Condition'] # Adding status and condition
+                product_data['Status'], product_data['Condition']
             ]
             cursor.execute(query, data)
             conn.commit()
@@ -168,7 +164,7 @@ def select_product_by_qr(company):
         </style>
         """, unsafe_allow_html=True)
 
-    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
+    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product_qr')
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
@@ -178,126 +174,71 @@ def select_product_by_qr(company):
     else:
         return None, None
 
-def select_product(company):
-    st.write("## ค้นหาสินค้า")
-    search_method = st.radio("เลือกรูปแบบการค้นหา", options=["พิมพ์เพื่อค้นหา 🔎", "ค้นหาจาก QR Code 🔍"], index=0, key='search_method')
+# Main logic
+st.title("ERP Count Stock System")
+st.sidebar.title("User Authentication")
 
-    if search_method == "พิมพ์เพื่อค้นหา 🔎":
-        selected_product_name, selected_item = select_product_by_text(company)
-    elif search_method == "ค้นหาจาก QR Code 🔍":
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+    st.session_state['user_type'] = None
+    st.session_state['username'] = None
+
+if not st.session_state['logged_in']:
+    username = st.sidebar.text_input("Username")
+    password = st.sidebar.text_input("Password", type="password")
+    if st.sidebar.button("Login"):
+        user_type = check_credentials(username, password)
+        if user_type:
+            st.session_state['logged_in'] = True
+            st.session_state['user_type'] = user_type
+            st.session_state['username'] = username
+            st.success("Logged in successfully!")
+            st.experimental_rerun()
+        else:
+            st.error("Invalid credentials")
+else:
+    st.sidebar.write(f"Logged in as: {st.session_state['username']}")
+    if st.sidebar.button("Logout"):
+        st.session_state['logged_in'] = False
+        st.session_state['user_type'] = None
+        st.session_state['username'] = None
+        st.experimental_rerun()
+
+if st.session_state['logged_in']:
+    company = st.selectbox("Select Company", ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.'])
+    whcid = st.text_input('WHCID')
+    if not whcid:
+        st.warning("Please input WHCID before proceeding.")
+
+    tab1, tab2 = st.tabs(["Scan QR Code", "Search by Text"])
+
+    with tab1:
         selected_product_name, selected_item = select_product_by_qr(company)
-    else:
-        selected_product_name, selected_item = None, None
 
-    return selected_product_name, selected_item
+    with tab2:
+        selected_product_name, selected_item = select_product_by_text(company)
 
-def display_product_details(filtered_items_df):
-    try:
-        if not filtered_items_df.empty:
-            product_id = filtered_items_df['ITMID'].values[0]
-            product_name = filtered_items_df['NAME_TH'].values[0]
-            purchasing_uom = filtered_items_df['PURCHASING_UOM'].values[0]
-            model = filtered_items_df['MODEL'].values[0]
-            brand_name = filtered_items_df['BRAND_NAME'].values[0]
-            cab_name = filtered_items_df['CAB_NAME'].values[0]
-            she_name = filtered_items_df['SHE_NAME'].values[0]
-            blk_name = filtered_items_df['BLK_NAME'].values[0]
-            whcid = filtered_items_df['WHCID'].values[0]
-            warehouse_name = filtered_items_df['WAREHOUSE_NAME'].values[0]
-            batch_no = filtered_items_df['BATCH_NO'].values[0]
-            in_stock = filtered_items_df['INSTOCK'].values[0]
-            return product_id, product_name, purchasing_uom, model, brand_name, cab_name, she_name, blk_name, whcid, warehouse_name, batch_no, in_stock
-        else:
-            st.error("No data found for the selected product in the specified warehouse.")
-            return None
-    except Exception as e:
-        st.error(f"Error displaying product details: {e}")
-        return None
+    if selected_product_name and whcid:
+        if 'product_data' not in st.session_state:
+            st.session_state['product_data'] = {}
 
-def main():
-    st.title("🌐 KG Data Analytics System")
+        st.session_state['product_data']['whcid'] = whcid
+        st.session_state['product_data']['Enter_By'] = st.session_state['username']
+        st.session_state['product_data']['Product_ID'] = selected_item.iloc[0]['ITMID']
+        st.session_state['product_data']['Product_Name'] = selected_item.iloc[0]['NAME_TH']
+        st.session_state['product_data']['Purchasing_UOM'] = selected_item.iloc[0]['PURCHASING_UOM']
+        st.session_state['product_data']['Total_Balance'] = selected_item.iloc[0]['INSTOCK']
+        st.session_state['product_data']['Status'] = ''
+        st.session_state['product_data']['Condition'] = ''
+        st.session_state['product_data']['Time'] = datetime.now(pytz.timezone('Asia/Bangkok')).strftime('%Y-%m-%d %H:%M:%S')
 
-    with st.sidebar:
-        st.image("kg_logo.png", use_column_width=True)
-        st.subheader("🔐 Login")
-        st.session_state.search_method = "พิมพ์เพื่อค้นหา 🔎"
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        company = st.selectbox("เลือกบริษัท", ["K.G. Corporation Co.,Ltd.", "The Chill Resort & Spa Co., Ltd."])
+        st.write("กรอกข้อมูลสินค้า 📋")
+        st.session_state['product_data']['Quantity'] = st.number_input("จำนวนที่นับได้", min_value=0)
+        st.session_state['product_data']['Remark'] = st.text_area("หมายเหตุ")
 
-    if st.button("👉 Enter"):
-        user_role = check_credentials(username, password)
-        if user_role:
-            st.session_state.search_method = "พิมพ์เพื่อค้นหา 🔎"
-            st.session_state.logged_in = True
-        else:
-            st.error("Invalid username or password.")
+        if st.button("บันทึกข้อมูล"):
+            conn_str = get_connection_string(company)
+            save_to_database(st.session_state['product_data'], conn_str)
 
-    if st.session_state.get('logged_in'):
-        st.subheader("Welcome to KG Data Analytics System")
-
-        selected_product_name, selected_item = select_product(company)
-
-        if selected_product_name:
-            with st.expander("🔍 View product details"):
-                st.write(f"### Selected product: {selected_product_name}")
-                filtered_items_df = load_data(selected_product_name, company, conn_str)
-                product_details = display_product_details(filtered_items_df)
-
-            if product_details:
-                with st.form(key='product_data_form'):
-                    product_id, product_name, purchasing_uom, model, brand_name, cab_name, she_name, blk_name, whcid, warehouse_name, batch_no, in_stock = product_details
-
-                    st.write("### Product Information")
-                    st.write(f"**Product ID:** {product_id}")
-                    st.write(f"**Product Name:** {product_name}")
-                    st.write(f"**Purchasing UOM:** {purchasing_uom}")
-                    st.write(f"**Model:** {model}")
-                    st.write(f"**Brand Name:** {brand_name}")
-                    st.write(f"**Cabinet:** {cab_name}")
-                    st.write(f"**Shelf:** {she_name}")
-                    st.write(f"**Block:** {blk_name}")
-                    st.write(f"**Warehouse ID:** {whcid}")
-                    st.write(f"**Warehouse Name:** {warehouse_name}")
-                    st.write(f"**Batch No.:** {batch_no}")
-                    st.write(f"**In Stock:** {in_stock}")
-
-                    st.markdown("---")
-
-                    st.write("### Update Stock Information")
-                    st.number_input("Actual Quantity", min_value=0.0, step=1.0, format="%.2f", key='actual_quantity')
-                    st.text_area("Remark", key='remark')
-
-                    submit_button = st.form_submit_button("Submit")
-                    if submit_button:
-                        product_data = {
-                            "Product_ID": product_id,
-                            "Product_Name": product_name,
-                            "Purchasing_UOM": purchasing_uom,
-                            "Model": model,
-                            "Brand_Name": brand_name,
-                            "Cab_Name": cab_name,
-                            "She_Name": she_name,
-                            "Blk_Name": blk_name,
-                            "Whcid": whcid,
-                            "Warehouse_Name": warehouse_name,
-                            "Batch_No": batch_no,
-                            "In_Stock": in_stock,
-                            "Actual_Quantity": st.session_state.actual_quantity,
-                            "Remark": st.session_state.remark,
-                            "Enter_By": username,
-                            "Status": "Pending",
-                            "Condition": "New"
-                        }
-
-                        save_to_database(product_data, conn_str)
-
-                    st.markdown("---")
-
-            else:
-                st.warning("No product details to display.")
-    else:
-        st.warning("Please log in to access the system.")
-
-if __name__ == "__main__":
-    main()
+# Automatically refresh the page every 1 minute
+st_autorefresh(interval=60 * 1000)
