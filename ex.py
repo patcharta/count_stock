@@ -155,10 +155,21 @@ def select_product_by_qr(company):
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
+
+            # Handle product selection and data storage
+            st.session_state.selected_product = selected_product_name
+            st.session_state.selected_item = selected_product
+
+            # Reset selected_product in session state if exists
+            if 'selected_product' in st.session_state:
+                del st.session_state['selected_product']
+
+            # Rerun the app to update the display
+            st.experimental_rerun()
+
             return selected_product_name, selected_product
 
     # If no QR code scanned or not found in items_df
-    #st.write("กรุณาสแกน QR Code เพื่อเลือกสินค้า")
     return None, None
 
 def select_product(company):
