@@ -320,58 +320,77 @@ def login_section():
         else:
             st.error("Invalid username or password")
 
-def main_section():
-    st.write(f"👨🏻‍💼👩🏻‍💼 รายการสินค้าที่ {st.session_state.username.upper()} นับ")
-    st.write(f"🏭🏭 {st.session_state.company}")
+def main():
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    if 'user_role' not in st.session_state:
+        st.session_state.user_role = None
+    if 'enter_by' not in st.session_state:
+        st.session_state.enter_by = None
 
-    if st.session_state.selected_whcid is None:
-        st.write("เลือก WHCID")
-        conn_str = get_connection_string(st.session_state.company)
-        try:
-            with pyodbc.connect(conn_str) as conn:
-                whcid_query = '''
-                SELECT y.WHCID, y.NAME_TH
-                FROM ERP_WAREHOUSES_CODE y
-                WHERE y.EDITDATE IS NULL
-                '''
-                whcid_df = pd.read_sql(whcid_query, conn)
-                selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
-                if st.button("👉 Enter WHCID"):
-                    st.session_state.selected_whcid = selected_whcid
-                    st.experimental_rerun()
-        except pyodbc.Error as e:
-            st.error(f"Error connecting to the database: {e}")
-    else:
-        st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
-        st.markdown("---")
-        selected_product_name, selected_item = select_product(st.session_state.company)
+    if st.session_state.authenticated:
+        st.title("ERP Stock Count")
+
+        st.write("เลือกวิธีการค้นหา:")
+        search_option = st.radio("ค้นหาสินค้าด้วย:", ("ค้นหาด้วยข้อความ", "ค้นหาด้วย QR code"))
+
+        company_options = ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.']
+        selected_company = st.selectbox("เลือกบริษัท", options=company_options, index=None)
+
+        selected_product_name = None
+        selected_item = None
+
+        if search_option == "ค้นหาด้วยข้อความ":
+            selected_product_name, selected_item = select_product_by_text(selected_company)
+        elif search_option == "ค้นหาด้วย QR code":
+            selected_product_name, selected_item = select_product_by_qr(selected_company)
+
         if selected_product_name:
-            conn_str = get_connection_string(st.session_state.company)
-            count_product(selected_product_name, selected_item, conn_str)
-        if st.button('📤 Logout'):
-            st.session_state.logged_in = False
-            st.session_state.username = ''
-            st.session_state.selected_whcid = None
-            st.session_state.selected_product_name = None
-            st.session_state.product_data = []
-            st.session_state.product_quantity = 0
-            st.session_state.remark = ""
-            st.experimental_rerun()
+            st.write("เลือกคลังสินค้า")
+            warehouse_options = ['0101 - คลังสินค้าสำเร็จรูป', '0404 - คลังสินค้าสำเร็จรูป (Site)']
+            selected_whcid = st.selectbox("เลือกคลังสินค้า", options=warehouse_options, index=None)
 
-def app():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.username = ''
-        st.session_state.selected_whcid = None
-        st.session_state.selected_product_name = None
-        st.session_state.product_data = []
-        st.session_state.product_quantity = 0
-        st.session_state.remark = ""
-
-    if st.session_state.logged_in:
-        main_section()
+            if selected_whcid:
+                filtered_items_df = load_data(selected_product_name, selected_whcid, get_connection_string(selected_company))
+                if not filtered_items_df.empty:
+                    for index, row in filtered_items_df.iterrows():
+                        with st.form(key=f'form_{index}'):
+                            quantity = st.number_input(f"กรอกจำนวนสินค้าคงเหลือ: (Batch: {row['BATCH_NO']})", min_value=0.0, value=0.0)
+                            remark = st.text_input("หมายเหตุ", value="")
+                            submit_button = st.form_submit_button(label="บันทึกข้อมูล")
+                            if submit_button:
+                                product_data = {
+                                    'Time': datetime.now(pytz.timezone('Asia/Bangkok')),
+                                    'Enter_By': st.session_state.enter_by,
+                                    'Product_ID': row['ITMID'],
+                                    'Product_Name': row['NAME_TH'],
+                                    'Purchasing_UOM': row['PURCHASING_UOM'],
+                                    'Quantity': quantity,
+                                    'Total_Balance': row['INSTOCK'],
+                                    'Remark': remark,
+                                    'whcid': selected_whcid.split(' - ')[0],
+                                    'Status': 'รอผลตรวจนับ',
+                                    'Condition': 'ปกติ'
+                                }
+                                save_to_database(product_data, get_connection_string(selected_company))
+                else:
+                    st.warning("ไม่พบข้อมูลสินค้าที่เลือกในคลังสินค้าที่เลือก")
     else:
-        login_section()
+        st.title("ERP Stock Count")
+        st.write("Please login to continue")
+
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Login"):
+            user_role = check_credentials(username, password)
+            if user_role:
+                st.session_state.authenticated = True
+                st.session_state.user_role = user_role
+                st.session_state.enter_by = username
+                st.experimental_rerun()
+            else:
+                st.error("Invalid username or password")
 
 if __name__ == "__main__":
-    app()
+    main()
