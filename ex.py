@@ -157,12 +157,6 @@ def select_product_by_qr(company):
             selected_item = items_df[items_df['ITMID'] == qr_code]
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-            
-            # Clear session state and rerun the app
-            if 'selected_product' in st.session_state:
-                del st.session_state['selected_product']
-            st.experimental_rerun()
-            
             return selected_product_name, selected_item
 
     st.markdown("""
@@ -174,7 +168,6 @@ def select_product_by_qr(company):
         </style>
         """, unsafe_allow_html=True)
 
-    selected_product_name = st.selectbox("เลือกสินค้า", options=items_options, index=None, key='selected_product')
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
@@ -183,7 +176,6 @@ def select_product_by_qr(company):
         return selected_product_name, selected_item
     else:
         return None, None
-
 
 def select_product(company):
     st.write("เลือกวิธีค้นหาสินค้า:")
