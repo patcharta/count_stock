@@ -320,6 +320,7 @@ def login_section():
         else:
             st.error("Invalid username or password")
 
+
 def main():
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
@@ -379,18 +380,21 @@ def main():
         st.title("ERP Stock Count")
         st.write("Please login to continue")
 
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
 
-        if st.button("Login"):
-            user_role = check_credentials(username, password)
-            if user_role:
-                st.session_state.authenticated = True
-                st.session_state.user_role = user_role
-                st.session_state.enter_by = username
-                st.experimental_rerun()
-            else:
-                st.error("Invalid username or password")
+def app():
+    if 'logged_in' not in st.session_state:
+        st.session_state.logged_in = False
+        st.session_state.username = ''
+        st.session_state.selected_whcid = None
+        st.session_state.selected_product_name = None
+        st.session_state.product_data = []
+        st.session_state.product_quantity = 0
+        st.session_state.remark = ""
+
+    if st.session_state.logged_in:
+        main_section()
+    else:
+        login_section()
 
 if __name__ == "__main__":
-    main()
+    app()
