@@ -212,32 +212,38 @@ def main():
         selected_product_name, selected_item = select_product(st.session_state.company)
 
         if selected_product_name:
-            conn_str = get_connection_string(st.session_state.company)
-            selected_whcid = st.selectbox("เลือกคลังสินค้า", options=[f"{row['WHCID']} - {row['WAREHOUSE_NAME']}" for index, row in selected_item.iterrows()])
-            
-            if st.button('👉 Enter'):
-                filtered_items_df = load_data(selected_product_name, selected_whcid, conn_str)
-                if not filtered_items_df.empty:
-                    product_quantity_str = st.text_input("จำนวนที่นับได้")
-                    status = st.selectbox("สถานะ", ["New", "Used", "Damaged"])
-                    condition = st.selectbox("สภาพ", ["Good", "Fair", "Poor"])
-                    remark = st.text_area("หมายเหตุ")
+            st.write("Debug: Selected Item DataFrame")
+            st.write(selected_item)  # Print the DataFrame to debug
 
-                    if st.button('บันทึก'):
-                        product_data = {
-                            'Time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                            'Enter_By': st.session_state.username,
-                            'Product_ID': selected_item.iloc[0]['ITMID'],
-                            'Product_Name': selected_item.iloc[0]['NAME_TH'],
-                            'Purchasing_UOM': selected_item.iloc[0]['PURCHASING_UOM'],
-                            'Quantity': product_quantity_str,
-                            'Total_Balance': selected_item.iloc[0]['INSTOCK'],
-                            'whcid': selected_item.iloc[0]['WHCID'],
-                            'Status': status,
-                            'Condition': condition,
-                            'Remark': remark
-                        }
-                        save_to_database(product_data, conn_str)
+            conn_str = get_connection_string(st.session_state.company)
+            if 'WHCID' in selected_item.columns and 'WAREHOUSE_NAME' in selected_item.columns:
+                selected_whcid = st.selectbox("เลือกคลังสินค้า", options=[f"{row['WHCID']} - {row['WAREHOUSE_NAME']}" for index, row in selected_item.iterrows()])
+                
+                if st.button('👉 Enter'):
+                    filtered_items_df = load_data(selected_product_name, selected_whcid, conn_str)
+                    if not filtered_items_df.empty:
+                        product_quantity_str = st.text_input("จำนวนที่นับได้")
+                        status = st.selectbox("สถานะ", ["New", "Used", "Damaged"])
+                        condition = st.selectbox("สภาพ", ["Good", "Fair", "Poor"])
+                        remark = st.text_area("หมายเหตุ")
+
+                        if st.button('บันทึก'):
+                            product_data = {
+                                'Time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                'Enter_By': st.session_state.username,
+                                'Product_ID': selected_item.iloc[0]['ITMID'],
+                                'Product_Name': selected_item.iloc[0]['NAME_TH'],
+                                'Purchasing_UOM': selected_item.iloc[0]['PURCHASING_UOM'],
+                                'Quantity': product_quantity_str,
+                                'Total_Balance': selected_item.iloc[0]['INSTOCK'],
+                                'whcid': selected_item.iloc[0]['WHCID'],
+                                'Status': status,
+                                'Condition': condition,
+                                'Remark': remark
+                            }
+                            save_to_database(product_data, conn_str)
+            else:
+                st.error("Selected item DataFrame does not have the required columns 'WHCID' and 'WAREHOUSE_NAME'")
 
 if __name__ == "__main__":
     main()
