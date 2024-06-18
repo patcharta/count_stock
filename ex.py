@@ -169,7 +169,11 @@ def select_product(company):
     if search_method == "พิมพ์เพื่อค้นหา":
         return select_product_by_text(company)
     elif search_method == "QR เพื่อค้นหา":
-        return select_product_by_qr(company)
+        result = select_product_by_qr(company)
+        if 'selected_product' in st.session_state:
+            del st.session_state['selected_product']
+        st.experimental_rerun()
+        return result
     else:
         return None, None
         
