@@ -202,6 +202,24 @@ def select_product(company):
         return selected_product_name, selected_item
     return None, pd.DataFrame()
 
+def count_product(selected_product_name, selected_item, conn_str):
+    product_data = {
+        'Product_ID': selected_item.iloc[0]['ITMID'],
+        'Product_Name': selected_item.iloc[0]['NAME_TH'],
+        'Purchasing_UOM': selected_item.iloc[0]['PURCHASING_UOM'],
+        'Total_Balance': selected_item.iloc[0]['INSTOCK'],
+        'whcid': selected_item.iloc[0]['WHCID'],
+        'Status': 'New',  # Add status
+        'Condition': 'Good'  # Add condition
+    }
+    product_data['Time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    product_data['Enter_By'] = st.session_state.username
+    product_data['Quantity'] = st.number_input("กรุณาใส่จำนวนนับ:", min_value=0, step=1, value=0)
+    product_data['Remark'] = st.text_input("กรุณาใส่หมายเหตุ:")
+
+    if st.button('บันทึกข้อมูล'):
+        save_to_database(product_data, conn_str)
+
 def main_section():
     st.write(f"👨🏻‍💼👩🏻‍💼 รายการสินค้าที่ {st.session_state.username.upper()} นับ")
     st.write(f"🏭🏭 {st.session_state.company}")
@@ -249,6 +267,22 @@ def main_section():
             st.session_state.product_quantity = 0
             st.session_state.remark = ""
             st.experimental_rerun()
+
+def login_section():
+    st.title("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    company = st.selectbox("Select Company", ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.'])
+    
+    if st.button("Login"):
+        user_role = check_credentials(username, password)
+        if user_role:
+            st.session_state.logged_in = True
+            st.session_state.username = username
+            st.session_state.company = company
+            st.experimental_rerun()
+        else:
+            st.error("Invalid credentials")
 
 def app():
     if 'logged_in' not in st.session_state:
