@@ -240,5 +240,14 @@ if st.session_state['logged_in']:
             conn_str = get_connection_string(company)
             save_to_database(st.session_state['product_data'], conn_str)
 
-# Automatically refresh the page every 1 minute
-st_autorefresh(interval=60 * 1000)
+# JavaScript for auto-refresh
+st.markdown("""
+<script>
+    function autoRefresh() {
+        setTimeout(() => {
+            window.location.reload();
+        }, 60000);
+    }
+    autoRefresh();
+</script>
+""", unsafe_allow_html=True)
