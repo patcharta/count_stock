@@ -212,13 +212,18 @@ def main():
         selected_product_name, selected_item = select_product(st.session_state.company)
 
         if selected_product_name:
+            # Print the DataFrame to debug
             st.write("Debug: Selected Item DataFrame")
-            st.write(selected_item)  # Print the DataFrame to debug
+            st.write(selected_item)
+            st.write("Columns in selected_item:", selected_item.columns)
 
             conn_str = get_connection_string(st.session_state.company)
+
+            # Update this section with actual column names after debugging
+            # Check if the required columns exist in selected_item
             if 'WHCID' in selected_item.columns and 'WAREHOUSE_NAME' in selected_item.columns:
                 selected_whcid = st.selectbox("เลือกคลังสินค้า", options=[f"{row['WHCID']} - {row['WAREHOUSE_NAME']}" for index, row in selected_item.iterrows()])
-                
+
                 if st.button('👉 Enter'):
                     filtered_items_df = load_data(selected_product_name, selected_whcid, conn_str)
                     if not filtered_items_df.empty:
