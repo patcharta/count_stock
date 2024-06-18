@@ -381,20 +381,7 @@ def main():
         st.write("Please login to continue")
 
 
-def app():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.username = ''
-        st.session_state.selected_whcid = None
-        st.session_state.selected_product_name = None
-        st.session_state.product_data = []
-        st.session_state.product_quantity = 0
-        st.session_state.remark = ""
 
-    if st.session_state.logged_in:
-        main_section()
-    else:
-        login_section()
 
 if __name__ == "__main__":
     app()
