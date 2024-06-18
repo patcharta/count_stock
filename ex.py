@@ -166,11 +166,19 @@ def select_product(company):
         ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
 
     if search_method == "พิมพ์เพื่อค้นหา":
-        return select_product_by_text(company)
+        selected_product_name, selected_item = select_product_by_text(company)
     elif search_method == "QR เพื่อค้นหา":
-        return select_product_by_qr(company)
+        selected_product_name, selected_item = select_product_by_qr(company)
     else:
         return None, None
+
+    if selected_product_name is not None and selected_item is not None:
+        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+        st.markdown("---")
+        return selected_product_name, selected_item
+    else:
+        return None, None
+
         
 def get_image_url(product_name):
     try:
