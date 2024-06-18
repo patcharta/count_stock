@@ -145,19 +145,21 @@ def select_product_by_text(company):
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
-    items_options = list(items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'])
-
+    
     # QR code scanner
     qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
-        selected_product_name = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product_name.empty:
-            selected_product_name = selected_product_name.iloc[0]['ITMID'] + ' - ' + selected_product_name.iloc[0]['NAME_TH'] + ' - ' + selected_product_name.iloc[0]['MODEL'] + ' - ' + selected_product_name.iloc[0]['BRAND_NAME']
-            selected_item = items_df[items_df['ITMID'] == qr_code]
+        selected_product = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product.empty:
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.write(f"คุณเลือกสินค้า: {selected_product_name}")
             st.markdown("---")
-            return selected_product_name, selected_item
+            return selected_product_name, selected_product
+
+    # If no QR code scanned or not found in items_df
+    #st.write("กรุณาสแกน QR Code เพื่อเลือกสินค้า")
+    return None, None
 
 
 def select_product(company):
@@ -166,19 +168,11 @@ def select_product(company):
         ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
 
     if search_method == "พิมพ์เพื่อค้นหา":
-        selected_product_name, selected_item = select_product_by_text(company)
+        return select_product_by_text(company)
     elif search_method == "QR เพื่อค้นหา":
-        selected_product_name, selected_item = select_product_by_qr(company)
+        return select_product_by_qr(company)
     else:
         return None, None
-
-    if selected_product_name is not None and selected_item is not None:
-        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-        st.markdown("---")
-        return selected_product_name, selected_item
-    else:
-        return None, None
-
         
 def get_image_url(product_name):
     try:
