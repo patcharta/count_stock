@@ -213,6 +213,8 @@ def main():
 
         if selected_product_name:
             conn_str = get_connection_string(st.session_state.company)
+            selected_whcid = st.selectbox("เลือกคลังสินค้า", options=[f"{row['WHCID']} - {row['WAREHOUSE_NAME']}" for index, row in selected_item.iterrows()])
+            
             if st.button('👉 Enter'):
                 filtered_items_df = load_data(selected_product_name, selected_whcid, conn_str)
                 if not filtered_items_df.empty:
