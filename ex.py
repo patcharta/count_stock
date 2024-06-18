@@ -159,15 +159,6 @@ def select_product_by_qr(company):
             st.markdown("---")
             return selected_product_name, selected_item
 
-    st.markdown("""
-        <style>
-        .wrap-text .css-1wa3eu0 {
-            white-space: normal !important;
-            overflow-wrap: anywhere;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-
 
 def select_product(company):
     st.write("เลือกวิธีค้นหาสินค้า:")
