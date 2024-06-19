@@ -127,6 +127,17 @@ def fetch_products(company):
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
+def select_product(company):
+    st.write("เลือกวิธีค้นหาสินค้า:")
+    search_method = st.radio("", ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
+
+    if search_method == "พิมพ์เพื่อค้นหา":
+        return select_product_by_text(company)
+    elif search_method == "QR เพื่อค้นหา":
+        return select_product_by_qr(company)
+    else:
+        return None, None
+
 def select_product_by_text(company):
     st.write("ค้นหาสินค้า 🔎")
     items_df = fetch_products(company)
@@ -142,37 +153,6 @@ def select_product_by_text(company):
     else:
         return None, None
 
-def select_product_by_qr(company):
-    st.write("ค้นหาสินค้า 🔍")
-    items_df = fetch_products(company)
-    
-    # QR code scanner
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        selected_product = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
-            st.markdown("---")
-            return selected_product_name, selected_product
-
-    # If no QR code scanned or not found in items_df
-    #st.write("กรุณาสแกน QR Code เพื่อเลือกสินค้า")
-    return None, None
-
-def select_product(company):
-    st.write("เลือกวิธีค้นหาสินค้า:")
-    search_method = st.radio("",
-        ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
-
-    if search_method == "พิมพ์เพื่อค้นหา":
-        return select_product_by_text(company)
-    elif search_method == "QR เพื่อค้นหา":
-        return select_product_by_qr(company)
-    else:
-        return None, None
-        
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
@@ -228,7 +208,6 @@ def count_product(selected_product_name, selected_item, conn_str):
     if st.session_state.user_role == 'regular' and 'INSTOCK' in filtered_items_df.columns:
         total_balance = filtered_items_df['INSTOCK'].sum()
 
-    # Using text input to accept quantity as string
     product_quantity_str = st.text_input(label='จำนวนสินค้า 🛒', value="")
     status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
     condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
@@ -280,6 +259,22 @@ def count_product(selected_product_name, selected_item, conn_str):
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
+
+def select_product_by_qr(company):
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
+    
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        selected_product = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product.empty:
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+            st.markdown("---")
+            return selected_product_name, selected_product
+
+    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
