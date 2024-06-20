@@ -150,6 +150,7 @@ def select_product_by_text(company):
         #st.write(f"คุณเลือกสินค้า: {selected_product_name}")
         #st.write(f"คุณเลือกสินค้า **{selected_product_name}**")
         st.markdown(f'คุณเลือกสินค้า: **<span style="background-color: orange; padding: 2px 5px; border-radius: 5px; color: white;">{selected_product_name}</span>**', unsafe_allow_html=True)        st.markdown("---")
+        st.markdown("---")
         return selected_product_name, selected_item
     else:
         return None, None
