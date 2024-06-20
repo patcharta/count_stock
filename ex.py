@@ -149,7 +149,7 @@ def select_product_by_text(company):
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
         #st.write(f"คุณเลือกสินค้า: {selected_product_name}")
         #st.write(f"คุณเลือกสินค้า **{selected_product_name}**")
-        st.markdown(f'<div style="background-color: orange; padding: 5px; border-radius: 5px;"><p style="font-weight: bold;">คุณเลือกสินค้า: {selected_product_name}</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<span style="font-weight: bold;">คุณเลือกสินค้า: <span style="background-color: orange; padding: 2px 5px; border-radius: 5px; color: white;">{selected_product_name}</span></span>', unsafe_allow_html=True)
         st.markdown("---")
         return selected_product_name, selected_item
     else:
