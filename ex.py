@@ -273,18 +273,14 @@ def select_product_by_qr(company):
         """
         <style>
         .qr-scanner-container {
-            width: 100%;
-            padding-top: 100%; /* 1:1 Aspect Ratio */
-            position: relative;
-            height: 100px;
-            width: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
         }
         .qr-scanner-container > div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100px !important;
+            height: 100px !important;
         }
         </style>
         """, 
@@ -295,13 +291,7 @@ def select_product_by_qr(company):
     qr_code = st.empty()
     with qr_code.container():
         st.markdown('<div class="qr-scanner-container">', unsafe_allow_html=True)
-        qr_code = qrcode_scanner(
-            key="qr_code_scanner",
-            box_width=100,
-            box_height=100,
-            fps=10,
-            remember_last_used_camera=True
-        )
+        qr_code = qrcode_scanner(key="qr_code_scanner")
         st.markdown('</div>', unsafe_allow_html=True)
 
     if qr_code:
@@ -313,6 +303,7 @@ def select_product_by_qr(company):
             st.markdown("---")
             return selected_product_name, selected_product
     return None, None
+
                 
 def login_section():
     st.write("## Login 🚚")
