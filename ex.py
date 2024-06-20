@@ -268,34 +268,7 @@ def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
-    # CSS to make the QR scanner square
-    st.markdown(
-        """
-        <style>
-        .qr-scanner-container {
-            width: 100%;
-            padding-top: 100%; /* 1:1 Aspect Ratio */
-            position: relative;
-        }
-        .qr-scanner-container > div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-        }
-        </style>
-        """, 
-        unsafe_allow_html=True
-    )
-    
-    # QR scanner with square container
-    qr_code = st.empty()
-    with qr_code.container():
-        st.markdown('<div class="qr-scanner-container">', unsafe_allow_html=True)
-        qr_code = qrcode_scanner(key="qr_code_scanner")
-        st.markdown('</div>', unsafe_allow_html=True)
-
+    qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
@@ -304,6 +277,7 @@ def select_product_by_qr(company):
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
             return selected_product_name, selected_product
+
     return None, None
                 
 def login_section():
