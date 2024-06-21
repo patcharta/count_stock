@@ -272,7 +272,6 @@ def select_product_by_qr(company):
     if qr_code:
         if 'qr_code_scanner' in st.session_state:
             del st.session_state['qr_code_scanner']  # Remove QR scanner after successful scan
-        st.write(f"QR Code detected: {qr_code}")
         
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
@@ -282,7 +281,6 @@ def select_product_by_qr(company):
             return selected_product_name, selected_product
 
     return None, None
-
                 
 def login_section():
     st.write("## Login 🚚")
