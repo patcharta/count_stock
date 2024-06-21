@@ -250,20 +250,16 @@ def count_product(selected_product_name, selected_item, conn_str):
                         'Status': status,
                         'Condition': condition
                     }
-                    # ทำการเก็บข้อมูลที่เลือกไว้ใน session
                     st.session_state.product_data.append(product_data)
                     save_to_database(product_data, conn_str)
-                    # ล้างข้อมูลที่เก็บไว้ใน session หลังจากบันทึกเรียบร้อยแล้ว
                     st.session_state.product_data = []
                     st.session_state.product_quantity = 0
                     st.session_state.remark = ""
                     time.sleep(2)
-                    # ลบข้อมูลที่เก็บไว้ใน session เกี่ยวกับการเลือกสินค้า
                     if 'selected_product' in st.session_state:
                         del st.session_state['selected_product']
                     if 'qr_code_scanner' in st.session_state:
                         del st.session_state['qr_code_scanner']
-                    # รีเฟรชหน้าเว็บ
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
@@ -277,23 +273,10 @@ def select_product_by_qr(company):
         st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
-            selected_product_name = (
-                selected_product.iloc[0]['ITMID'] + ' - ' +
-                selected_product.iloc[0]['NAME_TH'] + ' - ' +
-                selected_product.iloc[0]['MODEL'] + ' - ' +
-                selected_product.iloc[0]['BRAND_NAME']
-            )
-            
-            # Ask for confirmation before proceeding
-            if st.button('Confirm'):
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                # แสดงรายละเอียดของสินค้า
-                st.write("รายละเอียดสินค้า:")
-                st.write(selected_product.iloc[0])  # แสดงข้อมูลทั้งหมดของสินค้าที่เลือก
-                return selected_product_name, selected_product
-            else:
-                st.warning("กรุณากดปุ่ม 'Confirm' เพื่อยืนยันการเลือกสินค้า")
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            st.markdown("---")
+            return selected_product_name, selected_product
 
     return None, None
                 
