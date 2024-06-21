@@ -286,6 +286,11 @@ def select_product_by_qr(company):
                 )
                 st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
                 st.markdown("---")
+                
+                # Store selected product details in session state
+                st.session_state.selected_product_name = selected_product_name
+                st.session_state.selected_item = selected_product
+                
                 return selected_product_name, selected_product
             else:
                 st.warning("ไม่พบสินค้าที่เกี่ยวข้องกับ QR Code ที่สแกน")
