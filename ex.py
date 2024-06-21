@@ -268,53 +268,17 @@ def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
-    # Check if QR code has been scanned
-    if 'qr_code_scanner' not in st.session_state:
-        qr_code = qrcode_scanner(key="qr_code_scanner")
-        st.session_state.qr_code_scanner = qr_code
-        
-    qr_code = st.session_state.qr_code_scanner
-    
+    qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
-        
-        # Display the scanned QR code and a confirmation button
-        confirm_scan = st.button("ยืนยันการสแกน")
-        
-        if confirm_scan:
-            selected_product = items_df[items_df['ITMID'] == qr_code]
-            if not selected_product.empty:
-                selected_product_name = (
-                    selected_product.iloc[0]['ITMID'] + ' - ' +
-                    selected_product.iloc[0]['NAME_TH'] + ' - ' +
-                    selected_product.iloc[0]['MODEL'] + ' - ' +
-                    selected_product.iloc[0]['BRAND_NAME']
-                )
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                
-                # Store selected product details in session state
-                st.session_state.selected_product_name = selected_product_name
-                st.session_state.selected_item = selected_product
-                
-                # Clear the QR code session state after selection
-                if 'qr_code_scanner' in st.session_state:
-                    del st.session_state['qr_code_scanner']
-                
-                return selected_product_name, selected_product
-            else:
-                st.warning("ไม่พบสินค้าที่เกี่ยวข้องกับ QR Code ที่สแกน")
-                st.markdown("---")
-                return None, None
-        else:
-            st.warning("กรุณายืนยันการสแกน QR Code ก่อนที่จะเลือกสินค้า")
+        selected_product = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product.empty:
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            return None, None
-    else:
-        st.warning("กรุณาสแกน QR Code ก่อน")
-        st.markdown("---")
-        return None, None
+            return selected_product_name, selected_product
 
+    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
