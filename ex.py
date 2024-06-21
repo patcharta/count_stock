@@ -8,7 +8,6 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from streamlit_qrcode_scanner import qrcode_scanner
-from PIL import Image
 
 # Set page configuration
 st.set_page_config(layout="wide")
@@ -265,9 +264,6 @@ def count_product(selected_product_name, selected_item, conn_str):
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
-import streamlit as st
-from PIL import Image
-
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
@@ -280,17 +276,7 @@ def select_product_by_qr(company):
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-
-            # Check if qr_code is not None before fetching the image
-            if qr_code:
-                qr_image = Image.open(f"https://api.qrserver.com/v1/create-qr-code/?data={qr_code}&size=150x150")
-                st.image(qr_image, caption='QR Code', use_column_width=True)
-
             return selected_product_name, selected_product
-        else:
-            st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
-    else:
-        st.warning("กรุณาสแกน QR Code เพื่อค้นหาสินค้า")
 
     return None, None
                 
