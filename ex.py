@@ -261,15 +261,41 @@ def select_product_by_qr(company):
     return None, None
 
 def main():
-    st.title("Simple Streamlit App")
-    st.write("This is a test to check network issues.")
-    
+    st.title("ระบบตรวจนับสินค้า 📦")
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
-    
+
     if st.button("Login"):
-        if username == "test" and password == "password":
+        user_type = check_credentials(username, password)
+        if user_type:
+            st.session_state.username = username
+            st.session_state.user_type = user_type
             st.success("Login successful!")
+            st.write(f"Welcome, {username} ({user_type})")
+
+            company_options = ['K.G. Corporation Co.,Ltd.', 'The Chill Resort & Spa Co., Ltd.']
+            selected_company = st.selectbox("เลือกบริษัท", options=company_options)
+
+            whcid_query = '''
+            SELECT WHCID, NAME_TH FROM ERP_WAREHOUSES_CODE
+            WHERE EDITDATE IS NULL
+            '''
+            conn_str = get_connection_string(selected_company)
+            try:
+                with pyodbc.connect(conn_str) as conn:
+                    whcid_df = pd.read_sql(whcid_query, conn)
+                    whcid_options = list(whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
+                    selected_whcid = st.selectbox("เลือกคลังสินค้า", options=whcid_options)
+                    st.session_state.selected_whcid = selected_whcid
+            except pyodbc.Error as e:
+                st.error(f"Error loading warehouses: {e}")
+            except Exception as e:
+                st.error(f"Unexpected error: {e}")
+
+            if selected_company and st.session_state.selected_whcid:
+                selected_product_name, selected_item = select_product(selected_company)
+                if selected_product_name:
+                    count_product(selected_product_name, selected_item, conn_str)
         else:
             st.error("Invalid username or password")
 
