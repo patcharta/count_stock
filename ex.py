@@ -1,22 +1,31 @@
 import streamlit as st
 import cv2
-from pyzbar.pyzbar import decode
+from PIL import Image
+import zbarlight
 
-st.title('QR Code Reader')
+st.title('QR Code Scanner from Camera')
 
-uploaded_file = st.file_uploader("Upload an image containing QR code", type=["jpg", "jpeg", "png"])
+camera = cv2.VideoCapture(0)
 
-if uploaded_file is not None:
-    # อ่านไฟล์ภาพจากอัปโหลด
-    img = cv2.imdecode(np.fromstring(uploaded_file.read(), np.uint8), cv2.IMREAD_UNCHANGED)
+while True:
+    _, frame = camera.read()
+    
+    # แปลงภาพจาก OpenCV BGR เป็น RGB (สำหรับ zbarlight)
+    img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    
+    # สร้างภาพ Image จาก OpenCV frame
+    pil_img = Image.fromarray(img_rgb)
+    
+    # สแกน QR code จากภาพ
+    codes = zbarlight.scan_codes('qrcode', pil_img)
+    
+    # แสดงผลลัพธ์
+    if codes:
+        st.success(f"Found QR code with data: {codes[0].decode('utf-8')}")
+        break
+    
+    # แสดงภาพจากกล้องใน Streamlit
+    st.image(frame, channels='BGR', use_column_width=True)
 
-    # ใช้ pyzbar เพื่ออ่าน QR code
-    decoded_objects = decode(img)
-
-    if decoded_objects:
-        st.header("Decoded QR Code:")
-        for obj in decoded_objects:
-            st.write(f"Data: {obj.data.decode('utf-8')}")
-            st.image(img, caption='Uploaded Image', use_column_width=True)
-    else:
-        st.write("No QR code detected in the uploaded image.")
+# หยุดกล้องเมื่อเสร็จสิ้น
+camera.release()
