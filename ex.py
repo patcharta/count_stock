@@ -284,7 +284,6 @@ def select_product_by_qr(company):
 
             else:
                 st.error("ไม่พบสินค้าที่เลือกจาก QR Code ในฐานข้อมูล")
-                return None, None
 
     return None, None
 
