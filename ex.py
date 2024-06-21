@@ -1,46 +1,22 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import cv2
+from pyzbar.pyzbar import decode
 
-st.title("QR Code Scanner")
+st.title('QR Code Reader')
 
-# HTML code with embedded script for QR code scanner
-html_code = """
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <style>
-        #qr-reader {
-            width: 100%;
-            max-width: 500px;
-            margin: auto;
-        }
-    </style>
-</head>
-<body>
-    <div id="qr-reader" style="width: 300px"></div>
-    <div id="qr-reader-results"></div>
-    <script>
-        function onScanSuccess(qrMessage) {
-            document.getElementById('qr-reader-results').innerText = `QR Code detected: ${qrMessage}`;
-        }
+uploaded_file = st.file_uploader("Upload an image containing QR code", type=["jpg", "jpeg", "png"])
 
-        function onScanError(errorMessage) {
-            // handle scan error
-        }
+if uploaded_file is not None:
+    # อ่านไฟล์ภาพจากอัปโหลด
+    img = cv2.imdecode(np.fromstring(uploaded_file.read(), np.uint8), cv2.IMREAD_UNCHANGED)
 
-        document.addEventListener("DOMContentLoaded", function() {
-            var html5QrcodeScanner = new Html5QrcodeScanner(
-                "qr-reader", 
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
-            html5QrcodeScanner.render(onScanSuccess, onScanError);
-        });
-    </script>
-</body>
-</html>
-"""
+    # ใช้ pyzbar เพื่ออ่าน QR code
+    decoded_objects = decode(img)
 
-# Embed the HTML code in the Streamlit app
-components.html(html_code, height=600)
+    if decoded_objects:
+        st.header("Decoded QR Code:")
+        for obj in decoded_objects:
+            st.write(f"Data: {obj.data.decode('utf-8')}")
+            st.image(img, caption='Uploaded Image', use_column_width=True)
+    else:
+        st.write("No QR code detected in the uploaded image.")
