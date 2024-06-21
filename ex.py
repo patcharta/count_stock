@@ -20,4 +20,4 @@ if qr_code:
     )
     
     # Display the QR code
-    st.image(qr_code, use_column_width=True)
+    st.image(qr_code, use_column_width=False)
