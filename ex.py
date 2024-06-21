@@ -277,8 +277,15 @@ def select_product_by_qr(company):
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
             return selected_product_name, selected_product
+        else:
+            st.error("ไม่พบสินค้าที่ตรงกับ QR Code ที่สแกน")
+            st.markdown("---")
+            return None, None
+    else:
+        st.warning("กรุณาสแกน QR Code เพื่อค้นหาสินค้า")
+        st.markdown("---")
+        return None, None
 
-    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
