@@ -1,40 +1,26 @@
 import streamlit as st
-import streamlit.components.v1 as components
+from streamlit.components.v1 import html
+from streamlit_qrcode_scanner import qrcode_scanner
 
-# HTML and CSS to display the QR code scanner in a square shape
-html_code = """
-<!DOCTYPE html>
-<html>
-  <head>
-    <style>
-      .scanner {
-        width: 100%;
-        max-width: 400px; /* Adjust width as necessary */
-        padding-top: 100%; /* 1:1 Aspect Ratio */
-        position: relative;
-      }
-      .scanner iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="scanner">
-      <iframe src="https://www.qrstuff.com" frameborder="0"></iframe>
-    </div>
-  </body>
-</html>
+# Define the HTML and CSS for a square scanner area
+scanner_html = """
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+  <div id="qrcode-scanner" style="width: 300px; height: 300px;"></div>
+</div>
+<script>
+  const videoElement = document.querySelector('video');
+  if (videoElement) {
+    videoElement.style.objectFit = 'cover';
+  }
+</script>
 """
 
-# Display the HTML content with the embedded iframe
-components.html(html_code, height=400)
+# Render the scanner HTML
+html(scanner_html, height=400)
 
-# Placeholder text input for manually entering scanned QR code
-qr_code = st.text_input("Enter scanned QR code manually here:")
+# Use the QR code scanner
+qr_code = qrcode_scanner(key='qrcode_scanner')
 
+# Display the QR code result if available
 if qr_code:
     st.write(qr_code)
