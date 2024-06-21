@@ -1,43 +1,16 @@
+import cv2
+import numpy as np
 import streamlit as st
-from streamlit_qrcode_scanner import qrcode_scanner
 
-st.set_page_config(layout="wide")
+image = st.camera_input("Show QR code")
 
-def app():
-    st.title("QR Code Scanner with Square Box")
-    
-    # Define the CSS for a square scanning box
-    st.markdown(
-        """
-        <style>
-        .qr-box {
-            position: relative;
-            width: 500px;
-            height: 500px;
-            border: 5px solid #ffa726;
-            margin: auto;
-        }
-        .qr-scanner video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+if image is not None:
+    bytes_data = image.getvalue()
+    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
-    st.write("Scan your QR code within the box below:")
+    detector = cv2.QRCodeDetector()
 
-    # Display the QR code scanner with the square box
-    qr_code = qrcode_scanner(key="qr_code_scanner")
+    data, bbox, straight_qrcode = detector.detectAndDecode(cv2_img)
 
-    if qr_code:
-        st.success(f"QR Code detected: {qr_code}")
-
-    st.markdown('<div class="qr-box"><div class="qr-scanner"></div></div>', unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    app()
+    st.write("Here!")
+    st.write(data)
