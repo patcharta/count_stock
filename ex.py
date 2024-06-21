@@ -376,3 +376,6 @@ def app():
         st.session_state.product_quantity = 0
         st.session_state.remark = ""
         st.experimental_rerun()
+        
+if __name__ == "__main__":
+    app()
