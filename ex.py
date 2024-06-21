@@ -264,14 +264,10 @@ def count_product(selected_product_name, selected_item, conn_str):
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
-already_detected = False  # เพิ่มตัวแปรสำหรับเก็บสถานะการตรวจจับ QR code
-
-import streamlit as st
-
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
-    items_df = fetch_products(company)
-    
+    items_df = fetch_products(company)  # Replace with your fetch_products function
+
     qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
@@ -290,6 +286,8 @@ def select_product_by_qr(company):
                 )
                 st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
                 st.markdown("---")
+                
+                # Return selected product details for further processing
                 return selected_product_name, selected_product
 
     return None, None
@@ -340,11 +338,17 @@ def main_section():
     else:
         st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
         st.markdown("---")
-        selected_product_name, selected_item = select_product(st.session_state.company)
-        if selected_product_name:
+        
+        # Attempt to select product using QR code
+        selected_product_name, selected_item = select_product_by_qr(st.session_state.company)
+        
+        # If a product is selected, proceed to counting
+        if selected_product_name and selected_item:
             conn_str = get_connection_string(st.session_state.company)
             count_product(selected_product_name, selected_item, conn_str)
+        
         if st.button('📤 Logout'):
+            # Clear session state on logout
             st.session_state.logged_in = False
             st.session_state.username = ''
             st.session_state.selected_whcid = None
