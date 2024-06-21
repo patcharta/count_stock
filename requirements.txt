@@ -9,3 +9,9 @@ requests
 opencv-python-headless
 pyzbar
 streamlit-qrcode-scanner
+zbarlight
+BarCodeReader
+quirc
+barcode.writer
+qrtools
+pyqrcode
