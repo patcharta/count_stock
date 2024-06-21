@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 import re
 from streamlit_qrcode_scanner import qrcode_scanner
 from PIL import Image
+from pyzbar.pyzbar import decode
 
 # Set page configuration
 st.set_page_config(layout="wide")
