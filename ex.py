@@ -269,7 +269,6 @@ def select_product_by_qr(company):
                 return selected_product_name, selected_product
 
     return None, None
-
                 
 def login_section():
     st.write("## Login 🚚")
