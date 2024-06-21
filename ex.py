@@ -129,12 +129,12 @@ def fetch_products(company):
 
 def select_product(company):
     st.write("เลือกวิธีค้นหาสินค้า:")
-    search_method = st.radio("", ["พิมพ์เพื่อค้นหา", "QR เพื่อค้นหา"])
+    search_method = st.radio("", ["QR เพื่อค้นหา", "พิมพ์เพื่อค้นหา"])
 
-    if search_method == "พิมพ์เพื่อค้นหา":
-        return select_product_by_text(company)
-    elif search_method == "QR เพื่อค้นหา":
+    if search_method == "QR เพื่อค้นหา":
         return select_product_by_qr(company)
+    elif search_method == "พิมพ์เพื่อค้นหา":
+        return select_product_by_text(company)
     else:
         return None, None
 
@@ -147,7 +147,9 @@ def select_product_by_text(company):
 
     if selected_product_name:
         selected_item = items_df[items_df['ITMID'] + ' - ' + items_df['NAME_TH'] + ' - ' + items_df['MODEL'] + ' - ' + items_df['BRAND_NAME'] == selected_product_name]
-        st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+        #st.write(f"คุณเลือกสินค้า **{selected_product_name}**")
+        #st.markdown(f'คุณเลือกสินค้า: **<span style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</span>**', unsafe_allow_html=True)       
+        st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
         st.markdown("---")
         return selected_product_name, selected_item
     else:
@@ -272,7 +274,7 @@ def select_product_by_qr(company):
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.write(f"คุณเลือกสินค้า: {selected_product_name}")
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
             return selected_product_name, selected_product
 
