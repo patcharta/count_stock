@@ -264,34 +264,29 @@ def count_product(selected_product_name, selected_item, conn_str):
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
+import streamlit as st
+from PIL import Image
+
 def select_product_by_qr(company):
-    st.write("ค้นหาสินค้า 🔍")  # Display search header in Thai
-    items_df = fetch_products(company)  # Fetch products based on the company
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
     
-    qr_code = qrcode_scanner(key="qr_code_scanner")  # Scan QR code
-    
-    if qr_code:  # If QR code is detected
-        st.write(f"QR Code detected: {qr_code}")  # Display detected QR code
-        
-    if st.button("Confirm Selection"):  # If user confirms selection
-        selected_product = items_df[items_df['ITMID'] == qr_code]  # Select product matching QR code
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
-            # Create a formatted product name string
-            selected_product_name = (
-                selected_product.iloc[0]['ITMID'] + ' - ' +
-                selected_product.iloc[0]['NAME_TH'] + ' - ' +
-                selected_product.iloc[0]['MODEL'] + ' - ' +
-                selected_product.iloc[0]['BRAND_NAME']
-            )
-            # Display selected product name with styling
-            st.markdown(
-                f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>',
-                unsafe_allow_html=True
-            )
-            st.markdown("---")  # Add a horizontal rule for separation
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            st.markdown("---")
+
+            # แสดงรูปภาพ QR code ที่สแกนได้
+            qr_image = Image.open(f"https://api.qrserver.com/v1/create-qr-code/?data={qr_code}&size=150x150")
+            st.image(qr_image, caption='QR Code', use_column_width=True)
+
             return selected_product_name, selected_product
 
-    return None, None  # Return None if no QR code detected or no product selected
+    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
