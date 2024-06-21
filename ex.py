@@ -171,7 +171,7 @@ def get_image_url(product_name):
         st.error(f"Error fetching image: {e}")
         return None
 
-def count_product(selected_product_name, selected_item, conn_str):
+def count_product(selected_product_name, selected_item, conn_str, username):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
     total_balance = 0
 
@@ -194,11 +194,7 @@ def count_product(selected_product_name, selected_item, conn_str):
         else:
             st.write("ไม่มีสินค้าที่มียอดเหลือในคลัง")
 
-        if not filtered_items_df.empty:
-            product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
-        else:
-            product_name = f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
-
+        product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}" if not filtered_items_df.empty else f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
         image_url = get_image_url(product_name)
         if image_url:
             st.image(image_url, width=300)
@@ -231,7 +227,7 @@ def count_product(selected_product_name, selected_item, conn_str):
                     current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
                     product_data = {
                         'Time': current_time,
-                        'Enter_By': st.session_state.username.upper(),
+                        'Enter_By': username.upper(),
                         'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
                         'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
                         'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
@@ -250,16 +246,9 @@ def count_product(selected_product_name, selected_item, conn_str):
                         'Status': status,
                         'Condition': condition
                     }
-                    st.session_state.product_data.append(product_data)
                     save_to_database(product_data, conn_str)
-                    st.session_state.product_data = []
-                    st.session_state.product_quantity = 0
+                    st.success("บันทึกข้อมูลสำเร็จ!")
                     st.session_state.remark = ""
-                    time.sleep(2)
-                    if 'selected_product' in st.session_state:
-                        del st.session_state['selected_product']
-                    #if 'qr_code_scanner' in st.session_state:
-                        #del st.session_state['qr_code_scanner']
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
