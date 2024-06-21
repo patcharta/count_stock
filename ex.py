@@ -342,10 +342,12 @@ def main_section():
         # Attempt to select product using QR code
         selected_product_name, selected_item = select_product_by_qr(st.session_state.company)
         
-        # If a product is selected, proceed to counting
+        # Check if selected_item is None
         if selected_product_name and selected_item:
             conn_str = get_connection_string(st.session_state.company)
             count_product(selected_product_name, selected_item, conn_str)
+        else:
+            st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
         
         if st.button('📤 Logout'):
             # Clear session state on logout
