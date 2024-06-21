@@ -271,12 +271,14 @@ def select_product_by_qr(company):
     qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
-        selected_product = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-            st.markdown("---")
-            return selected_product_name, selected_product
+        st.markdown("---")
+        if st.button("เลือก QR นี้"):
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+                return selected_product_name, selected_product
 
     return None, None
                 
