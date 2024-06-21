@@ -268,33 +268,35 @@ def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
-    qr_code = qrcode_scanner(key="qr_code_scanner")
+    qr_code_scanned = False
+    selected_product_name = None
+    selected_product = None
     
-    # Check if QR code is scanned
-    if qr_code:
-        # Remove the QR code scanner widget
-        st.empty()
-
-        # Select the product based on the scanned QR code
-        selected_product = items_df[items_df['ITMID'] == qr_code]
-
-        if not selected_product.empty:
-            # Construct the product name
-            selected_product_name = (
-                selected_product.iloc[0]['ITMID'] + ' - ' +
-                selected_product.iloc[0]['NAME_TH'] + ' - ' +
-                selected_product.iloc[0]['MODEL'] + ' - ' +
-                selected_product.iloc[0]['BRAND_NAME']
-            )
-
-            # Display the selected product name
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-            st.markdown("---")
+    while not qr_code_scanned:
+        qr_code = qrcode_scanner(key="qr_code_scanner")
+        
+        # Check if QR code is scanned
+        if qr_code:
+            qr_code_scanned = True
             
-            # Return the selected product name and dataframe
-            return selected_product_name, selected_product
+            # Select the product based on the scanned QR code
+            selected_product = items_df[items_df['ITMID'] == qr_code]
 
-    return None, None
+            if not selected_product.empty:
+                # Construct the product name
+                selected_product_name = (
+                    selected_product.iloc[0]['ITMID'] + ' - ' +
+                    selected_product.iloc[0]['NAME_TH'] + ' - ' +
+                    selected_product.iloc[0]['MODEL'] + ' - ' +
+                    selected_product.iloc[0]['BRAND_NAME']
+                )
+
+                # Display the selected product name
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+
+    # Return the selected product name and dataframe
+    return selected_product_name, selected_product
 
                 
 def login_section():
