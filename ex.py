@@ -355,27 +355,5 @@ def app():
     else:
         login_section()
 
-    # Check if a product is selected via QR code or text
-    selected_product_name = st.session_state.selected_product_name
-    selected_item = None  # Assuming selected_item is None for QR code selection
-    if 'qr_code_scanner' in st.session_state:
-        selected_product_name, selected_item = select_product_by_qr(st.session_state.company)
-        st.session_state.selected_product_name = selected_product_name
-
-    # Process the selected product
-    if selected_product_name:
-        conn_str = get_connection_string(st.session_state.company)
-        count_product(selected_product_name, selected_item, conn_str)
-
-    if st.button('📤 Logout'):
-        st.session_state.logged_in = False
-        st.session_state.username = ''
-        st.session_state.selected_whcid = None
-        st.session_state.selected_product_name = None
-        st.session_state.product_data = []
-        st.session_state.product_quantity = 0
-        st.session_state.remark = ""
-        st.experimental_rerun()
-        
 if __name__ == "__main__":
     app()
