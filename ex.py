@@ -271,17 +271,34 @@ def select_product_by_qr(company):
     qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
-        selected_product = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-            st.markdown("---")
-
-            # Confirmation button
-            if st.button("ยืนยันการเลือกสินค้า"):
+        
+        # Display the scanned QR code and a confirmation button
+        confirm_scan = st.button("ยืนยันการสแกน")
+        
+        if confirm_scan:
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = (
+                    selected_product.iloc[0]['ITMID'] + ' - ' +
+                    selected_product.iloc[0]['NAME_TH'] + ' - ' +
+                    selected_product.iloc[0]['MODEL'] + ' - ' +
+                    selected_product.iloc[0]['BRAND_NAME']
+                )
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
                 return selected_product_name, selected_product
-
-    return None, None
+            else:
+                st.warning("ไม่พบสินค้าที่เกี่ยวข้องกับ QR Code ที่สแกน")
+                st.markdown("---")
+                return None, None
+        else:
+            st.warning("กรุณายืนยันการสแกน QR Code ก่อนที่จะเลือกสินค้า")
+            st.markdown("---")
+            return None, None
+    else:
+        st.warning("กรุณาสแกน QR Code ก่อน")
+        st.markdown("---")
+        return None, None
                 
 def login_section():
     st.write("## Login 🚚")
