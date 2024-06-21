@@ -177,7 +177,7 @@ def count_product(selected_product_name, selected_item, conn_str):
             st.dataframe(filtered_items_df_positive_balance)
             if 'INSTOCK' in display_columns:
                 total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
-                                st.write(f"รวมจำนวนสินค้าทั้งหมด: **{total_balance}**")
+                st.write(f"รวมจำนวนสินค้าทั้งหมด: **{total_balance}**")
 
                 st.markdown("---")
 
