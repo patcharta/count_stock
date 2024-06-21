@@ -276,11 +276,12 @@ def select_product_by_qr(company):
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            # Reset QR code scanner state
-            st.session_state.qr_code_scanner = None
+            if 'qr_code_scanner' in st.session_state:
+                del st.session_state['qr_code_scanner']  # Close the QR code scanner after detecting the code
             return selected_product_name, selected_product
 
     return None, None
+
                 
 def login_section():
     st.write("## Login 🚚")
