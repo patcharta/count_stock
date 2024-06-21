@@ -1,50 +1,36 @@
 import streamlit as st
-from streamlit.components.v1 import html
-from streamlit_qrcode_scanner import qrcode_scanner
+import streamlit.components.v1 as components
 
-# Add custom CSS for square scanning area
-custom_css = """
-<style>
-.qr-code-scanner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
+st.title("QR Code Scanner")
 
-.qr-code-scanner video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: auto;
-    height: 100%;
-    transform: translate(-50%, -50%);
-}
+# Create a div for the QR code scanner
+components.html("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+        <style>
+            #qr-reader {
+                width: 100%;
+                max-width: 500px;
+                margin: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="qr-reader" style="width:300px"></div>
+        <div id="qr-reader-results"></div>
+        <script>
+            function onScanSuccess(qrMessage) {
+                document.getElementById('qr-reader-results').innerText = `QR Code detected: ${qrMessage}`;
+            }
 
-.qr-code-scanner .qr-code-square {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 80%;
-    height: 80%;
-    max-width: 300px;
-    max-height: 300px;
-    border: 5px solid white;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-    transform: translate(-50%, -50%);
-    box-sizing: border-box;
-}
-</style>
-"""
-
-# Include the CSS in your Streamlit app
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# QR code scanner component
-qr_code = qrcode_scanner(key='qrcode_scanner')
-
-# Overlay the square scanning area
-html('<div class="qr-code-scanner"><div class="qr-code-square"></div></div>', height=500)
-
-if qr_code:
-    st.write(qr_code)
+            var html5QrcodeScanner = new Html5QrcodeScanner(
+                "qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } });
+            html5QrcodeScanner.render(onScanSuccess);
+        </script>
+    </body>
+    </html>
+    """,
+    height=600,
+)
