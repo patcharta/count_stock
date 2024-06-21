@@ -265,33 +265,20 @@ def count_product(selected_product_name, selected_item, conn_str):
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
 def select_product_by_qr(company):
-    # Check if session state variables exist, if not initialize them
-    if 'qr_result' not in st.session_state:
-        st.session_state.qr_result = None
-    if 'scanner_active' not in st.session_state:
-        st.session_state.scanner_active = True
-
-    if st.session_state.scanner_active:
-        st.subheader("สแกน QR Code เพื่อตรวจสอบสินค้า")
-        qrcode_data = qrcode_scanner(key="scanner")
-
-        if qrcode_data:
-            st.session_state.qr_result = qrcode_data
-            st.session_state.scanner_active = False  # Stop the scanner once QR code is detected
-
-    if st.session_state.qr_result:
-        items_df = fetch_products(company)
-        matched_item = items_df[items_df['ITMID'] == st.session_state.qr_result]
-
-        if not matched_item.empty:
-            selected_product_name = matched_item['ITMID'].values[0] + ' - ' + matched_item['NAME_TH'].values[0] + ' - ' + matched_item['MODEL'].values[0] + ' - ' + matched_item['BRAND_NAME'].values[0]
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
+    
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        selected_product = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product.empty:
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            return selected_product_name, matched_item
-        else:
-            st.warning("ไม่พบข้อมูลสินค้าที่ตรงกับ QR code นี้")
-            st.session_state.qr_result = None  # Reset the result if no match is found
-            st.session_state.scanner_active = True  # Reactivate the scanner
+            # Reset QR code scanner state
+            st.session_state.qr_code_scanner = None
+            return selected_product_name, selected_product
 
     return None, None
                 
