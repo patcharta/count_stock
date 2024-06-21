@@ -175,46 +175,97 @@ def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
     total_balance = 0
 
-    # Assuming the rest of your logic follows
+    if not filtered_items_df.empty:
+        st.write("รายละเอียดสินค้า:")
+        filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
+        filtered_items_df_positive_balance = filtered_items_df[filtered_items_df['INSTOCK'] > 0]
 
-    # Handle form submission
-    if st.form_submit_button('👉 Enter'):
-        if status is None or condition is None:
-            st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
-        elif status == "ผสม" and not remark.strip():
-            st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
+        display_columns = ['Location', 'BATCH_NO']
+        if st.session_state.user_role == 'special':
+            display_columns.append('INSTOCK')
+
+        if not filtered_items_df_positive_balance.empty:
+            filtered_items_df_positive_balance = filtered_items_df_positive_balance[display_columns]
+            filtered_items_df_positive_balance.index = range(1, len(filtered_items_df_positive_balance) + 1)
+            st.dataframe(filtered_items_df_positive_balance)
+            if 'INSTOCK' in display_columns:
+                total_balance = filtered_items_df_positive_balance['INSTOCK'].sum()
+                st.write(f"รวมยอดสินค้าในคลัง: {total_balance}")
         else:
-            try:
-                product_quantity = int(product_quantity_str)
-                if product_quantity < 0:
-                    st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
-                else:
-                    timezone = pytz.timezone('Asia/Bangkok')
-                    current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
-                    product_data = {
-                        'Time': current_time,
-                        'Enter_By': st.session_state.username.upper(),
-                        'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
-                        # Populate other fields accordingly
-                    }
-                    # Print out product_data for debugging
-                    print(product_data)
-                    # Save to database
-                    save_to_database(product_data, conn_str)
-                    # Clear session state or reset necessary values
-                    st.session_state.product_data = []
-                    st.session_state.product_quantity = 0
-                    st.session_state.remark = ""
-                    time.sleep(2)
-                    if 'selected_product' in st.session_state:
-                        del st.session_state['selected_product']
-                    if 'qr_code_scanner' in st.session_state:
-                        del st.session_state['qr_code_scanner']
-                    # Rerun the app to reflect changes
-                    st.experimental_rerun()
-            except ValueError:
-                st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
+            st.write("ไม่มีสินค้าที่มียอดเหลือในคลัง")
 
+        if not filtered_items_df.empty:
+            product_name = f"{filtered_items_df['NAME_TH'].iloc[0]} {filtered_items_df['MODEL'].iloc[0]} {filtered_items_df['BRAND_NAME'].iloc[0]}"
+        else:
+            product_name = f"{selected_item['NAME_TH'].iloc[0]} {selected_item['MODEL'].iloc[0]} {selected_item['BRAND_NAME'].iloc[0]}"
+
+        image_url = get_image_url(product_name)
+        if image_url:
+            st.image(image_url, width=300)
+        else:
+            st.write("ไม่พบรูปภาพของสินค้า")
+    else:
+        st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
+
+    if st.session_state.user_role == 'regular' and 'INSTOCK' in filtered_items_df.columns:
+        total_balance = filtered_items_df['INSTOCK'].sum()
+
+    # Use st.form to handle form submission without page refresh
+    with st.form(key='product_form'):
+        product_quantity_str = st.text_input(label='จำนวนสินค้า 🛒', value="")
+        status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
+        condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
+        remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
+        st.markdown("---")
+
+        # Handle form submission
+        if st.form_submit_button('👉 Enter'):
+            if status is None or condition is None:
+                st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
+            elif status == "ผสม" and not remark.strip():
+                st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
+            else:
+                try:
+                    product_quantity = int(product_quantity_str)
+                    if product_quantity < 0:
+                        st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
+                    else:
+                        timezone = pytz.timezone('Asia/Bangkok')
+                        current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+                        product_data = {
+                            'Time': current_time,
+                            'Enter_By': st.session_state.username.upper(),
+                            'Product_ID': str(filtered_items_df['ITMID'].iloc[0] if not filtered_items_df.empty else selected_item['ITMID'].iloc[0]),
+                            'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
+                            'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
+                            'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
+                            'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
+                            'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
+                            'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
+                            'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
+                            'Quantity': product_quantity,
+                            'Remark': remark,
+                            'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
+                            'Status': status,
+                            'Condition': condition
+                        }
+                        st.session_state.product_data.append(product_data)
+                        save_to_database(product_data, conn_str)
+                        st.session_state.product_data = []
+                        st.session_state.product_quantity = 0
+                        st.session_state.remark = ""
+                        time.sleep(2)
+                        if 'selected_product' in st.session_state:
+                            del st.session_state['selected_product']
+                        if 'qr_code_scanner' in st.session_state:
+                            del st.session_state['qr_code_scanner']
+                        st.experimental_rerun()
+                except ValueError:
+                    st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
