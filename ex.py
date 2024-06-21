@@ -267,31 +267,21 @@ def count_product(selected_product_name, selected_item, conn_str):
 import streamlit as st
 
 def select_product_by_qr(company):
-    st.write("ค้นหาสินค้า 🔍")  # Display message "ค้นหาสินค้า 🔍" on Streamlit interface
-    items_df = fetch_products(company)  # Fetch products data for the specified company
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
     
-    # QR code scanning
-    qr_code = st.text_input("กรุณาสแกน QR Code:")  # Use text_input instead of qrcode_scanner for simplicity
-    
-    if qr_code:  # If QR code is scanned or entered
-        st.write(f"QR Code detected: {qr_code}")  # Display the detected QR code
-        
-        # Select product with 'ITMID' matching qr_code from items_df
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
-        
-        if not selected_product.empty:  # If a product matching qr_code is found
-            # Display product details
+        if not selected_product.empty:
             st.write(f"Detected product: {selected_product.iloc[0]['ITMID']} - {selected_product.iloc[0]['NAME_TH']} - {selected_product.iloc[0]['MODEL']} - {selected_product.iloc[0]['BRAND_NAME']}")
-            
-            # Confirm Selection button
+            if st.button("Confirm Selection"):
             if st.button("Confirm Selection"):
                 st.session_state.selected_product = selected_product
                 st.experimental_rerun()
-            
-            # Return selected product name and details
-            return selected_product.iloc[0]['NAME_TH'], selected_product
-        
-    # If no product matches qr_code or no QR code scanned, return None, None
+                return selected_product_name, selected_product
+
     return None, None
 
                 
