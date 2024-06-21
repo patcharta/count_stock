@@ -277,9 +277,6 @@ def select_product_by_qr(company):
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
             return selected_product_name, selected_product
-        
-        st.experimental_rerun()
-
     return None, None
                 
 def login_section():
