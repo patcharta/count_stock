@@ -6,4 +6,6 @@ pycryptodome
 configparser
 beautifulsoup4
 requests
+opencv-python-headless
+pyzbar
 streamlit-qrcode-scanner
