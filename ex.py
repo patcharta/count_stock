@@ -268,7 +268,7 @@ def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
-    qr_code = qrcode_scanner(key="qr_code_scanner")
+    qr_code = st.qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
@@ -277,6 +277,8 @@ def select_product_by_qr(company):
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
             return selected_product_name, selected_product
+        
+        st.experimental_rerun()
 
     return None, None
                 
