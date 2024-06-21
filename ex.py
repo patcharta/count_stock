@@ -1,26 +1,24 @@
 import streamlit as st
-import barcode
-from barcode.writer import ImageWriter
+import qrtools
 
-st.title('QR Code Generator and Scanner from Camera')
+st.title('QR Code Scanner from Camera')
 
-data = st.text_input("Enter data for QR code generation:")
+camera = cv2.VideoCapture(0)
 
-if data:
-    qr = barcode.get_barcode_class('qrcode')
-    qr_code = qr(data, writer=ImageWriter())
-    qr_code_img = qr_code.save('qr_code.png')
-    st.image('qr_code.png', caption='Generated QR Code', use_column_width=True)
-
-    st.write("Scan the QR code using the camera:")
-
-    camera = cv2.VideoCapture(0)
+while True:
+    _, frame = camera.read()
     
-    while True:
-        _, frame = camera.read()
-
-        # แสดงภาพจากกล้องใน Streamlit
-        st.image(frame, channels='BGR', use_column_width=True)
+    # ใช้ qrtools เพื่ออ่าน QR code
+    qr = qrtools.QR()
+    qr.decode_webcam()
     
-    # หยุดกล้องเมื่อเสร็จสิ้น
-    camera.release()
+    # แสดงผลลัพธ์
+    if qr.data:
+        st.success(f"Found QR code with data: {qr.data}")
+        break
+    
+    # แสดงภาพจากกล้องใน Streamlit
+    st.image(frame, channels='BGR', use_column_width=True)
+
+# หยุดกล้องเมื่อเสร็จสิ้น
+camera.release()
