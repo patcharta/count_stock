@@ -253,12 +253,11 @@ def count_product(selected_product_name, selected_item, conn_str):
                             'Status': status,
                             'Condition': condition
                         }
-                        st.session_state.product_data.append(product_data)
-                        save_to_database(product_data, conn_str)
+                        save_to_database(product_data, conn_str)  # Save data here
+                        # Clear session state and rerun app if necessary
                         st.session_state.product_data = []
                         st.session_state.product_quantity = 0
                         st.session_state.remark = ""
-                        time.sleep(2)
                         if 'selected_product' in st.session_state:
                             del st.session_state['selected_product']
                         if 'qr_code_scanner' in st.session_state:
