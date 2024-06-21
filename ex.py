@@ -343,7 +343,7 @@ def main_section():
         selected_product_name, selected_item = select_product_by_qr(st.session_state.company)
         
         # Check if selected_item is None
-        if selected_product_name and selected_item:
+        if selected_product_name and selected_item is not None:
             conn_str = get_connection_string(st.session_state.company)
             count_product(selected_product_name, selected_item, conn_str)
         else:
