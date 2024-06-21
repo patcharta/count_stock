@@ -1,7 +1,22 @@
 import streamlit as st
-from streamlit_qrcode_scanner import qrcode_scanner
 
-qr_code = qrcode_scanner(key='qrcode_scanner')
+html_code = '''
+<div id="reader" style="width: 600px; height: 600px;"></div>
+<script src="./dist/html5-qrcode.js"></script>
+<script>
+    var resultContainer = document.createElement('div');
+    resultContainer.id = 'results';
+    document.body.appendChild(resultContainer);
 
-if qr_code:
-st.write(qr_code)
+    var html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: 250 });
+    
+    html5QrcodeScanner.render(onScanSuccess);
+    
+    function onScanSuccess(qrCodeMessage) {
+        document.getElementById('results').innerText = qrCodeMessage;
+    }
+</script>
+'''
+
+st.components.v1.html(html_code)
