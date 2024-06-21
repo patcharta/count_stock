@@ -258,8 +258,8 @@ def count_product(selected_product_name, selected_item, conn_str):
                     time.sleep(2)
                     if 'selected_product' in st.session_state:
                         del st.session_state['selected_product']
-                    if 'qr_code_scanner' in st.session_state:
-                        del st.session_state['qr_code_scanner']
+                    #if 'qr_code_scanner' in st.session_state:
+                        #del st.session_state['qr_code_scanner']
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
