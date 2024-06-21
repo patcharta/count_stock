@@ -252,16 +252,15 @@ def count_product(selected_product_name, selected_item, conn_str):
                     }
                     st.session_state.product_data.append(product_data)
                     save_to_database(product_data, conn_str)
-                    # st.session_state.product_data = []  # No need to clear here if you're using append
-                    # st.session_state.product_quantity = 0
-                    # st.session_state.remark = ""
-                    # time.sleep(2)  # Consider removing unnecessary sleep
-                    # if 'selected_product' in st.session_state:
-                    #     del st.session_state['selected_product']
-                    # if 'qr_code_scanner' in st.session_state:
-                    #     del st.session_state['qr_code_scanner']
-                    # st.experimental_rerun()  # Avoid rerunning here, handle rerun logic in main_section()
-                    st.success("Data saved successfully!")
+                    st.session_state.product_data = []
+                    st.session_state.product_quantity = 0
+                    st.session_state.remark = ""
+                    time.sleep(2)
+                    if 'selected_product' in st.session_state:
+                        del st.session_state['selected_product']
+                    if 'qr_code_scanner' in st.session_state:
+                        del st.session_state['qr_code_scanner']
+                    st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
@@ -277,16 +276,9 @@ def select_product_by_qr(company):
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            
-            # Add a confirmation mechanism
-            if st.button('ยืนยันการเลือกสินค้า'):
-                return selected_product_name, selected_product
-            
-            # Optional: Add a mechanism to clear QR code detection
-            # qrcode_scanner(key="qr_code_scanner", clear=True)
-            
-    return None, None
+            return selected_product_name, selected_product
 
+    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
