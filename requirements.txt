@@ -7,3 +7,4 @@ configparser
 beautifulsoup4
 requests
 streamlit-qrcode-scanner
+cv2
