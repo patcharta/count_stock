@@ -10,9 +10,9 @@ if qr_code:
     st.markdown(
         f"""
         <style>
-        .st-qrcode-scanner {{
-            width: 250px !important;
-            height: 250px !important;
+        #qrcode_scanner-container {{
+            width: 300px !important;
+            height: 300px !important;
         }}
         </style>
         """,
