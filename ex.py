@@ -275,7 +275,7 @@ def select_product_by_qr(company):
         align-items: center;
         height: 400px; /* Adjust height as needed */
     }
-    .qr-scanner-wrapper .stTextInput {
+    .qr-scanner-wrapper iframe {
         width: 400px; /* Make it square */
         height: 400px; /* Make it square */
     }
@@ -283,7 +283,7 @@ def select_product_by_qr(company):
     """
     st.markdown(css_code, unsafe_allow_html=True)
     
-    qr_code_data = qrcode_scanner(key="qr_scanner", box_size=400)
+    qr_code_data = qrcode_scanner(key="qr_scanner")
 
     if qr_code_data:
         st.success(f"QR Code data: {qr_code_data}")
