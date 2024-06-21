@@ -264,8 +264,17 @@ def count_product(selected_product_name, selected_item, conn_str):
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
+def qrcode_scanner(key):
+    return st.text_input('Scan QR code')
+
+# Function to select product by QR code
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
+    
+    # Initialize session state
+    if 'selected_product' not in st.session_state:
+        st.session_state.selected_product = None
+
     items_df = fetch_products(company)
     
     qr_code = qrcode_scanner(key="qr_code_scanner")
@@ -273,14 +282,22 @@ def select_product_by_qr(company):
         st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            selected_product_name = (
+                selected_product.iloc[0]['ITMID'] + ' - ' +
+                selected_product.iloc[0]['NAME_TH'] + ' - ' +
+                selected_product.iloc[0]['MODEL'] + ' - ' +
+                selected_product.iloc[0]['BRAND_NAME']
+            )
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            # Set qr_code to None to "delete" the scanned QR code
+            
+            # Set selected product to session state
+            st.session_state.selected_product = selected_product_name
+            
+            # Reset qr_code to None to "delete" the scanned QR code (optional)
             qr_code = None
-            return selected_product_name, selected_product
 
-    return None, None
+    return st.session_state.selected_product
 
                 
 def login_section():
