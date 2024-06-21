@@ -34,3 +34,4 @@ components.html("""
     """,
     height=600,
 )
+qr_code = qrcode_scanner(key='qrcode_scanner')
