@@ -265,16 +265,25 @@ def count_product(selected_product_name, selected_item, conn_str):
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
 def select_product_by_qr(company):
-    qr_code_data = qrcode_scanner()
-    if qr_code_data:
-        items_df = fetch_products(company)
-        selected_item = items_df[items_df['ITMID'] == qr_code_data]
-        if not selected_item.empty:
-            selected_product_name = selected_item.iloc[0]['ITMID'] + ' - ' + selected_item.iloc[0]['NAME_TH'] + ' - ' + selected_item.iloc[0]['MODEL'] + ' - ' + selected_item.iloc[0]['BRAND_NAME']
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-            st.markdown("---")
-            st.session_state.qr_code_scanned = True  # Set flag to indicate QR code is scanned
-            return selected_product_name, selected_item
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
+    
+    if 'qr_code_scanner' not in st.session_state:
+        st.session_state.qr_code_scanner = True
+    
+    if st.session_state.qr_code_scanner:
+        qr_code = qrcode_scanner(key="qr_code_scanner")
+        if qr_code:
+            st.write(f"QR Code detected: {qr_code}")
+            st.session_state.qr_code_scanner = False  # Disable further scanning
+
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+                return selected_product_name, selected_product
+
     return None, None
 
                 
