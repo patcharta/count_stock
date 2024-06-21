@@ -276,8 +276,14 @@ def select_product_by_qr(company):
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-            return selected_product_name, selected_product
-
+            
+            # Add a confirmation mechanism
+            if st.button('ยืนยันการเลือกสินค้า'):
+                return selected_product_name, selected_product
+            
+            # Optional: Add a mechanism to clear QR code detection
+            # qrcode_scanner(key="qr_code_scanner", clear=True)
+            
     return None, None
                 
 def login_section():
