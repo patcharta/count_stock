@@ -281,11 +281,16 @@ def select_product_by_qr(company):
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
 
-            # แสดงรูปภาพ QR code ที่สแกนได้
-            qr_image = Image.open(f"https://api.qrserver.com/v1/create-qr-code/?data={qr_code}&size=150x150")
-            st.image(qr_image, caption='QR Code', use_column_width=True)
+            # Check if qr_code is not None before fetching the image
+            if qr_code:
+                qr_image = Image.open(f"https://api.qrserver.com/v1/create-qr-code/?data={qr_code}&size=150x150")
+                st.image(qr_image, caption='QR Code', use_column_width=True)
 
             return selected_product_name, selected_product
+        else:
+            st.warning("ไม่พบข้อมูลสินค้าที่เลือก")
+    else:
+        st.warning("กรุณาสแกน QR Code เพื่อค้นหาสินค้า")
 
     return None, None
                 
