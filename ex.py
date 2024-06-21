@@ -265,24 +265,25 @@ def count_product(selected_product_name, selected_item, conn_str):
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
 def select_product_by_qr(company):
-    st.write("QR code scanner เปิดใช้กล้อง")
-    scanned_code = qrcode_scanner(key="qrcode_scanner", timeout=60) # Keep the camera on for 60 seconds
+    st.write("สแกน QR code")
+    scanned_code = qrcode_scanner(key="qrcode_scanner")
 
     if scanned_code:
-        st.write(f"QR code ที่สแกน: {scanned_code}")
-        items_df = fetch_products(company)
-        selected_item = items_df[items_df['ITMID'] == scanned_code]
+        st.session_state.scanned_code = scanned_code
+        st.session_state.scanner_disabled = True
 
+    if st.session_state.get('scanned_code'):
+        items_df = fetch_products(company)
+        selected_item = items_df[items_df['ITMID'].astype(str).str.contains(st.session_state.scanned_code)]
+        
         if not selected_item.empty:
-            selected_product_name = f"{selected_item['ITMID'].values[0]} - {selected_item['NAME_TH'].values[0]} - {selected_item['MODEL'].values[0]} - {selected_item['BRAND_NAME'].values[0]}"
-            st.write(f"คุณเลือกสินค้า **{selected_product_name}**")
+            selected_product_name = selected_item.iloc[0]['ITMID'] + ' - ' + selected_item.iloc[0]['NAME_TH'] + ' - ' + selected_item.iloc[0]['MODEL'] + ' - ' + selected_item.iloc[0]['BRAND_NAME']
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            st.markdown("---")
             return selected_product_name, selected_item
         else:
-            st.warning("ไม่พบสินค้าในฐานข้อมูล")
+            st.warning("ไม่พบสินค้า")
             return None, None
-    else:
-        st.warning("ไม่ได้สแกน QR code")
-        return None, None
                 
 def login_section():
     st.write("## Login 🚚")
