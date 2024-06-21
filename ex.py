@@ -277,7 +277,6 @@ def select_product_by_qr(company):
         if not selected_product.empty:
             st.write(f"Detected product: {selected_product.iloc[0]['ITMID']} - {selected_product.iloc[0]['NAME_TH']} - {selected_product.iloc[0]['MODEL']} - {selected_product.iloc[0]['BRAND_NAME']}")
             if st.button("Confirm Selection"):
-            if st.button("Confirm Selection"):
                 st.session_state.selected_product = selected_product
                 st.experimental_rerun()
                 return selected_product_name, selected_product
