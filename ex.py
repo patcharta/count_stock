@@ -1,16 +1,7 @@
-import cv2
-import numpy as np
 import streamlit as st
+from streamlit_qrcode_scanner import qrcode_scanner
 
-image = st.camera_input("Show QR code")
+qr_code = qrcode_scanner(key='qrcode_scanner')
 
-if image is not None:
-    bytes_data = image.getvalue()
-    cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-
-    detector = cv2.QRCodeDetector()
-
-    data, bbox, straight_qrcode = detector.detectAndDecode(cv2_img)
-
-    st.write("Here!")
-    st.write(data)
+if qr_code:
+    st.write(qr_code)
