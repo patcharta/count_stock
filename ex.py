@@ -132,6 +132,7 @@ def select_product(company):
     search_method = st.radio("", ["QR เพื่อค้นหา", "พิมพ์เพื่อค้นหา"])
 
     if search_method == "QR เพื่อค้นหา":
+        st.session_state.qr_scanner_active = True  # Ensure the scanner is active
         return select_product_by_qr(company)
     elif search_method == "พิมพ์เพื่อค้นหา":
         return select_product_by_text(company)
@@ -268,15 +269,23 @@ def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        selected_product = items_df[items_df['ITMID'] == qr_code]
-        if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-            st.markdown("---")
-            return selected_product_name, selected_product
+    if 'qr_scanner_active' not in st.session_state:
+        st.session_state.qr_scanner_active = True
+
+    while st.session_state.qr_scanner_active:
+        qr_code = qrcode_scanner(key="qr_code_scanner")
+        if qr_code:
+            st.write(f"QR Code detected: {qr_code}")
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+                st.session_state.qr_scanner_active = False  # Stop the scanner
+                return selected_product_name, selected_product
+
+        # Adding a short sleep to prevent high CPU usage
+        time.sleep(1)
 
     return None, None
                 
