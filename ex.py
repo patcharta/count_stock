@@ -272,6 +272,9 @@ def select_product_by_qr(company):
     
     # Check if QR code is scanned
     if qr_code:
+        # Remove the QR code scanner widget
+        st.empty()
+
         # Select the product based on the scanned QR code
         selected_product = items_df[items_df['ITMID'] == qr_code]
 
@@ -287,9 +290,6 @@ def select_product_by_qr(company):
             # Display the selected product name
             st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
             st.markdown("---")
-
-            # Remove the QR code scanner widget
-            st.empty()
             
             # Return the selected product name and dataframe
             return selected_product_name, selected_product
