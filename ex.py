@@ -271,14 +271,12 @@ def select_product_by_qr(company):
     qr_code = qrcode_scanner(key="qr_code_scanner")
     if qr_code:
         st.write(f"QR Code detected: {qr_code}")
-        st.markdown("---")
-        if st.button("เลือก QR นี้"):
-            selected_product = items_df[items_df['ITMID'] == qr_code]
-            if not selected_product.empty:
-                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                return selected_product_name, selected_product
+        selected_product = items_df[items_df['ITMID'] == qr_code]
+        if not selected_product.empty:
+            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            st.markdown("---")
+            return selected_product_name, selected_product
 
     return None, None
                 
@@ -357,5 +355,24 @@ def app():
     else:
         login_section()
 
-if __name__ == "__main__":
-    app()
+    # Check if a product is selected via QR code or text
+    selected_product_name = st.session_state.selected_product_name
+    selected_item = None  # Assuming selected_item is None for QR code selection
+    if 'qr_code_scanner' in st.session_state:
+        selected_product_name, selected_item = select_product_by_qr(st.session_state.company)
+        st.session_state.selected_product_name = selected_product_name
+
+    # Process the selected product
+    if selected_product_name:
+        conn_str = get_connection_string(st.session_state.company)
+        count_product(selected_product_name, selected_item, conn_str)
+
+    if st.button('📤 Logout'):
+        st.session_state.logged_in = False
+        st.session_state.username = ''
+        st.session_state.selected_whcid = None
+        st.session_state.selected_product_name = None
+        st.session_state.product_data = []
+        st.session_state.product_quantity = 0
+        st.session_state.remark = ""
+        st.experimental_rerun()
