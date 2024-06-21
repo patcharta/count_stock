@@ -260,7 +260,7 @@ def count_product(selected_product_name, selected_item, conn_str):
                         del st.session_state['selected_product']
                     if 'qr_code_scanner' in st.session_state:
                         del st.session_state['qr_code_scanner']
-                    #st.experimental_rerun()
+                    st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
@@ -274,14 +274,12 @@ def select_product_by_qr(company):
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
             selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            
-            # Ask for confirmation before proceeding
-            if st.button('Confirm'):
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                return selected_product_name, selected_product
-            else:
-                st.warning("กรุณากดปุ่ม 'Confirm' เพื่อยืนยันการเลือกสินค้า")
+            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            st.markdown("---")
+            # Remove the qr_code_scanner key from session_state to hide the QR code scanner box
+            if 'qr_code_scanner' in st.session_state:
+                del st.session_state['qr_code_scanner']
+            return selected_product_name, selected_product
 
     return None, None
                 
