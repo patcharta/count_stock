@@ -250,16 +250,20 @@ def count_product(selected_product_name, selected_item, conn_str):
                         'Status': status,
                         'Condition': condition
                     }
+                    # ทำการเก็บข้อมูลที่เลือกไว้ใน session
                     st.session_state.product_data.append(product_data)
                     save_to_database(product_data, conn_str)
+                    # ล้างข้อมูลที่เก็บไว้ใน session หลังจากบันทึกเรียบร้อยแล้ว
                     st.session_state.product_data = []
                     st.session_state.product_quantity = 0
                     st.session_state.remark = ""
                     time.sleep(2)
+                    # ลบข้อมูลที่เก็บไว้ใน session เกี่ยวกับการเลือกสินค้า
                     if 'selected_product' in st.session_state:
                         del st.session_state['selected_product']
                     if 'qr_code_scanner' in st.session_state:
                         del st.session_state['qr_code_scanner']
+                    # รีเฟรชหน้าเว็บ
                     st.experimental_rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
