@@ -276,7 +276,6 @@ def select_product_by_qr(company):
         st.write(f"QR Code detected: {qr_code}")
         if st.button("ยืนยันการเลือกสินค้าจาก QR Code"):
             selected_product = items_df[items_df['ITMID'] == qr_code]
-            st.experimental_rerun()
             if not selected_product.empty:
                 selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
                 st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
