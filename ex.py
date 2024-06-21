@@ -264,21 +264,33 @@ def count_product(selected_product_name, selected_item, conn_str):
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
+already_detected = False  # เพิ่มตัวแปรสำหรับเก็บสถานะการตรวจจับ QR code
+
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
     items_df = fetch_products(company)
     
+    global already_detected  # ใช้ตัวแปร global เพื่อเก็บสถานะการตรวจจับ QR code ทั้งแอปพลิเคชัน
+
     qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
+    if qr_code and not already_detected:
         st.write(f"QR Code detected: {qr_code}")
         selected_product = items_df[items_df['ITMID'] == qr_code]
         if not selected_product.empty:
-            selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-            st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+            selected_product_name = (
+                selected_product.iloc[0]['ITMID'] + ' - ' +
+                selected_product.iloc[0]['NAME_TH'] + ' - ' +
+                selected_product.iloc[0]['MODEL'] + ' - ' +
+                selected_product.iloc[0]['BRAND_NAME']
+            )
+            st.markdown(
+                f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>',
+                unsafe_allow_html=True
+            )
             st.markdown("---")
-            del st.session_state['qr_code_scanner']
+            already_detected = True  # ตั้งค่าให้เป็น True เมื่อพบ QR code แล้ว
             return selected_product_name, selected_product
-
+    
     return None, None
                 
 def login_section():
