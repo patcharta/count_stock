@@ -24,11 +24,12 @@ html_code = """
   </head>
   <body>
     <div class="scanner">
-      <iframe src="YOUR_QR_SCANNER_URL_HERE" frameborder="0"></iframe>
+      <iframe src="https://example.com/your_qr_scanner" frameborder="0"></iframe>
     </div>
   </body>
 </html>
 """
+
 
 components.html(html_code, height=400)
 
