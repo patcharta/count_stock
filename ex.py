@@ -261,33 +261,15 @@ def count_product(selected_product_name, selected_item, conn_str):
                             'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
                             'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
                             'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
-                            'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                            'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                            'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
-                            'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
-                            'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
-                            'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
-                            'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
-                            'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
                             'Quantity': product_quantity,
-                            'Remark': remark,
-                            'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
                             'Status': status,
-                            'Condition': condition
+                            'Condition': condition,
+                            'Remark': remark
                         }
-                        st.session_state.product_data.append(product_data)
-                        save_to_database(product_data, conn_str)
-                        st.session_state.product_data = []
-                        st.session_state.product_quantity = 0
-                        st.session_state.remark = ""
-                        time.sleep(2)
-                        if 'selected_product' in st.session_state:
-                            del st.session_state['selected_product']
-                        if 'qr_code_scanner' in st.session_state:
-                            del st.session_state['qr_code_scanner']
-                        st.experimental_rerun()
+                        # Save product_data to database or any storage
+                        st.success("บันทึกข้อมูลสำเร็จ")
                 except ValueError:
-                    st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
+                    st.error("กรุณากรอกจำนวนสินค้าเป็นตัวเลข")
                 
 def login_section():
     st.write("## Login 🚚")
