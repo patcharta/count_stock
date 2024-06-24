@@ -155,26 +155,44 @@ def select_product_by_text(company):
     else:
         return None, None
 
+def select_product_by_qr(company):
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
+    
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        if st.button("ยืนยันการเลือกสินค้าจาก QR Code"):
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+                return selected_product_name, selected_product
+
+    return None, None
+
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
         url = f"https://www.google.com/search?tbm=isch&q={query}"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
         response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        image_element = soup.find("img", {"src": re.compile("https://.*")})
-        image_url = image_element["src"] if image_element else None
-        return image_url
+        soup = BeautifulSoup(response.text, "html.parser")
+        images = soup.find_all("img", {"src": re.compile("gstatic.com")})
+        if images:
+            return images[0]["src"]
+        else:
+            return None
     except Exception as e:
         st.error(f"Error fetching image: {e}")
         return None
 
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
-    total_balance = 0
-
+    
     if not filtered_items_df.empty:
         st.write("รายละเอียดสินค้า:")
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
@@ -270,23 +288,6 @@ def count_product(selected_product_name, selected_item, conn_str):
                         st.experimental_rerun()
                 except ValueError:
                     st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
-
-def select_product_by_qr(company):
-    st.write("ค้นหาสินค้า 🔍")
-    items_df = fetch_products(company)
-    
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        if st.button("ยืนยันการเลือกสินค้าจาก QR Code"):
-            selected_product = items_df[items_df['ITMID'] == qr_code]
-            if not selected_product.empty:
-                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                return selected_product_name, selected_product
-
-    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
