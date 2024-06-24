@@ -155,44 +155,26 @@ def select_product_by_text(company):
     else:
         return None, None
 
-def select_product_by_qr(company):
-    st.write("ค้นหาสินค้า 🔍")
-    items_df = fetch_products(company)
-    
-    qr_code = qrcode_scanner(key="qr_code_scanner")
-    if qr_code:
-        st.write(f"QR Code detected: {qr_code}")
-        if st.button("ยืนยันการเลือกสินค้าจาก QR Code"):
-            selected_product = items_df[items_df['ITMID'] == qr_code]
-            if not selected_product.empty:
-                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
-                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
-                st.markdown("---")
-                return selected_product_name, selected_product
-
-    return None, None
-
 def get_image_url(product_name):
     try:
         query = "+".join(product_name.split())
         url = f"https://www.google.com/search?tbm=isch&q={query}"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
         }
         response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, "html.parser")
-        images = soup.find_all("img", {"src": re.compile("gstatic.com")})
-        if images:
-            return images[0]["src"]
-        else:
-            return None
+        soup = BeautifulSoup(response.text, 'html.parser')
+        image_element = soup.find("img", {"src": re.compile("https://.*")})
+        image_url = image_element["src"] if image_element else None
+        return image_url
     except Exception as e:
         st.error(f"Error fetching image: {e}")
         return None
 
 def count_product(selected_product_name, selected_item, conn_str):
     filtered_items_df = load_data(selected_product_name, st.session_state.selected_whcid, conn_str)
-    
+    total_balance = 0
+
     if not filtered_items_df.empty:
         st.write("รายละเอียดสินค้า:")
         filtered_items_df['Location'] = filtered_items_df[['CAB_NAME', 'SHE_NAME', 'BLK_NAME']].apply(lambda x: ' / '.join(x.astype(str)), axis=1)
@@ -241,17 +223,17 @@ def count_product(selected_product_name, selected_item, conn_str):
         if submit_button:
             # Validate inputs
             if not product_quantity_str.strip():
-                st.error("กรุณากรอกจำนวนสินค้า")
+                st.session_state.error_message = "กรุณากรอกจำนวนสินค้า"
             elif status == "ผสม" and not remark.strip():
-                st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
-            elif not status or not condition:
-                st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
+                st.session_state.error_message = "กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'"
             else:
                 try:
                     product_quantity = int(product_quantity_str)
                     if product_quantity < 0:
-                        st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
+                        st.session_state.error_message = "กรุณากรอกจำนวนสินค้าที่มากกว่า 0"
                     else:
+                        # Reset error message
+                        st.session_state.error_message = ""
                         timezone = pytz.timezone('Asia/Bangkok')
                         current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
                         product_data = {
@@ -261,15 +243,54 @@ def count_product(selected_product_name, selected_item, conn_str):
                             'Product_Name': str(filtered_items_df['NAME_TH'].iloc[0] if not filtered_items_df.empty else selected_item['NAME_TH'].iloc[0]),
                             'Model': str(filtered_items_df['MODEL'].iloc[0] if not filtered_items_df.empty else selected_item['MODEL'].iloc[0]),
                             'Brand_Name': str(filtered_items_df['BRAND_NAME'].iloc[0] if not filtered_items_df.empty else selected_item['BRAND_NAME'].iloc[0]),
+                            'Cabinet': str(filtered_items_df['CAB_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Shelf': str(filtered_items_df['SHE_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Block': str(filtered_items_df['BLK_NAME'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
+                            'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
+                            'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
+                            'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
+                            'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
                             'Quantity': product_quantity,
+                            'Remark': remark,
+                            'whcid': filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0],
                             'Status': status,
-                            'Condition': condition,
-                            'Remark': remark
+                            'Condition': condition
                         }
-                        # Save product_data to database or any storage
-                        st.success("บันทึกข้อมูลสำเร็จ")
+                        st.session_state.product_data.append(product_data)
+                        save_to_database(product_data, conn_str)
+                        st.session_state.product_data = []
+                        st.session_state.product_quantity = 0
+                        st.session_state.remark = ""
+                        time.sleep(2)
+                        if 'selected_product' in st.session_state:
+                            del st.session_state['selected_product']
+                        if 'qr_code_scanner' in st.session_state:
+                            del st.session_state['qr_code_scanner']
+                        st.experimental_rerun()
                 except ValueError:
-                    st.error("กรุณากรอกจำนวนสินค้าเป็นตัวเลข")
+                    st.session_state.error_message = "กรุณากรอกจำนวนสินค้าที่ถูกต้อง"
+
+        # Show error message if any
+        if 'error_message' in st.session_state and st.session_state.error_message:
+            st.error(st.session_state.error_message)
+
+def select_product_by_qr(company):
+    st.write("ค้นหาสินค้า 🔍")
+    items_df = fetch_products(company)
+    
+    qr_code = qrcode_scanner(key="qr_code_scanner")
+    if qr_code:
+        st.write(f"QR Code detected: {qr_code}")
+        if st.button("ยืนยันการเลือกสินค้าจาก QR Code"):
+            selected_product = items_df[items_df['ITMID'] == qr_code]
+            if not selected_product.empty:
+                selected_product_name = selected_product.iloc[0]['ITMID'] + ' - ' + selected_product.iloc[0]['NAME_TH'] + ' - ' + selected_product.iloc[0]['MODEL'] + ' - ' + selected_product.iloc[0]['BRAND_NAME']
+                st.markdown(f'คุณเลือกสินค้า: <strong style="background-color: #ffa726; padding: 2px 5px; border-radius: 5px; color: black;">{selected_product_name}</strong>', unsafe_allow_html=True)
+                st.markdown("---")
+                return selected_product_name, selected_product
+
+    return None, None
                 
 def login_section():
     st.write("## Login 🚚")
