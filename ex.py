@@ -338,10 +338,15 @@ def main_section():
     else:
         st.write(f"คุณเลือก WHCID: {st.session_state.selected_whcid}")
         st.markdown("---")
-        selected_product_name, selected_item = select_product(st.session_state.company)
-        if selected_product_name:
+
+        # เรียกใช้ฟังก์ชัน select_product_by_qr เพื่อเลือกสินค้า
+        select_product_by_qr(st.session_state.company)
+
+        if 'selected_product_name' in st.session_state and 'selected_item' in st.session_state:
+            # เรียกใช้ฟังก์ชัน count_product เพื่อกรอกรายละเอียดสินค้าและบันทึกข้อมูล
             conn_str = get_connection_string(st.session_state.company)
-            count_product(selected_product_name, selected_item, conn_str)
+            count_product(conn_str)
+
         if st.button('📤 Logout'):
             st.session_state.logged_in = False
             st.session_state.username = ''
