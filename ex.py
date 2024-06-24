@@ -213,13 +213,15 @@ def count_product(selected_product_name, selected_item, conn_str):
     # Use st.form to handle form submission without page refresh
     with st.form(key='product_form'):
         product_quantity_str = st.text_input(label='จำนวนสินค้า 🛒', value="")
-        status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=None)
-        condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=None)
+        status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=0)
+        condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=0)
         remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
         st.markdown("---")
 
         # Handle form submission
-        if st.form_submit_button('👉 Enter'):
+        submit_button = st.form_submit_button('👉 Enter')
+
+        if submit_button:
             if status is None or condition is None:
                 st.error("กรุณาเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
             elif status == "ผสม" and not remark.strip():
