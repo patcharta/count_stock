@@ -215,22 +215,25 @@ def count_product(selected_product_name, selected_item, conn_str):
         product_quantity_str = st.text_input(label='จำนวนสินค้า 🛒', value="")
         status = st.selectbox("สถานะ 📝", ["มือหนึ่ง", "มือสอง", "ผสม", "รอเคลม", "รอคืน", "รอขาย"], index=0)
         condition = st.selectbox("สภาพสินค้า 📝", ["ใหม่", "เก่าเก็บ", "พอใช้ได้", "แย่", "เสียหาย", "ผสม"], index=0)
-        remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.remark)
+        remark = st.text_area('หมายเหตุ 💬  \nระบุ สถานะ : ผสม (ใหม่+ของคืน)  \nสภาพสินค้า: ผสม (ใหม่+เก่า+เศษ+อื่นๆ)', value=st.session_state.get('remark', ''))
         st.markdown("---")
 
         submit_button = st.form_submit_button('👉 Enter')
 
         if submit_button:
-            if not product_quantity_str.strip() or not status or not condition:
-                st.error("กรุณากรอกจำนวนสินค้า และเลือก 'สถานะ' และ 'สภาพสินค้า' ก่อนบันทึกข้อมูล")
+            # Validate inputs
+            if not product_quantity_str.strip():
+                st.session_state.error_message = "กรุณากรอกจำนวนสินค้า"
             elif status == "ผสม" and not remark.strip():
-                st.error("กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'")
+                st.session_state.error_message = "กรุณาใส่ 'หมายเหตุ' เมื่อเลือกสถานะ 'ผสม'"
             else:
                 try:
                     product_quantity = int(product_quantity_str)
                     if product_quantity < 0:
-                        st.error("กรุณากรอกจำนวนสินค้าที่มากกว่า 0")
+                        st.session_state.error_message = "กรุณากรอกจำนวนสินค้าที่มากกว่า 0"
                     else:
+                        # Reset error message
+                        st.session_state.error_message = ""
                         timezone = pytz.timezone('Asia/Bangkok')
                         current_time = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
                         product_data = {
@@ -266,7 +269,11 @@ def count_product(selected_product_name, selected_item, conn_str):
                             del st.session_state['qr_code_scanner']
                         st.experimental_rerun()
                 except ValueError:
-                    st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
+                    st.session_state.error_message = "กรุณากรอกจำนวนสินค้าที่ถูกต้อง"
+
+        # Show error message if any
+        if 'error_message' in st.session_state and st.session_state.error_message:
+            st.error(st.session_state.error_message)
 
 def select_product_by_qr(company):
     st.write("ค้นหาสินค้า 🔍")
