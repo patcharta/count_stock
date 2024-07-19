@@ -24,7 +24,7 @@ def check_credentials(username, password):
         'dream': ('5678', 'regular'),
         'admin1': ('adminpassword', 'regular'),
         'tan': ('9876', 'special'),
-        'admin': ('adminpassword', 'special'),
+        'patchar': ('adminpassword', 'special'),
         'vasz': ('1234', 'special')
     }
     user_info = user_db.get(username.lower())
