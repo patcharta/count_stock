@@ -242,7 +242,14 @@ def count_product(selected_product_name, selected_item, conn_str):
                         'Warehouse_ID': str(filtered_items_df['WHCID'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[0]),
                         'Warehouse_Name': str(filtered_items_df['WAREHOUSE_NAME'].iloc[0] if not filtered_items_df.empty else st.session_state.selected_whcid.split(' -')[1]),
                         'Batch_No': str(filtered_items_df['BATCH_NO'].iloc[0] if not filtered_items_df.empty else ""),
-                        'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
+                        #'Purchasing_UOM': str(filtered_items_df['PURCHASING_UOM'].iloc[0] if not filtered_items_df.empty else selected_item['PURCHASING_UOM'].iloc[0]),
+                        'Purchasing_UOM': str(
+                            filtered_items_df['PURCHASING_UOM'].iloc[0]
+                            if not filtered_items_df.empty and 'PURCHASING_UOM' in filtered_items_df.columns
+                            else selected_item['PURCHASING_UOM'].iloc[0]
+                            if 'PURCHASING_UOM' in selected_item.columns
+                            else 'Default UOM'
+                        ),
                         'Total_Balance': int(total_balance) if not filtered_items_df.empty else 0,
                         'Quantity': product_quantity,
                         'Remark': remark,
@@ -260,7 +267,7 @@ def count_product(selected_product_name, selected_item, conn_str):
                         del st.session_state['selected_product']
                     if 'qr_code_scanner' in st.session_state:
                         del st.session_state['qr_code_scanner']
-                    st.experimental_rerun()
+                    st.rerun()
             except ValueError:
                 st.error("กรุณากรอกจำนวนสินค้าที่ถูกต้อง")
 
@@ -298,7 +305,7 @@ def login_section():
             st.session_state.user_role = user_role
             st.success(f"🎉🎉 Welcome {username}")
             time.sleep(1)
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Invalid username or password")
 
@@ -320,7 +327,7 @@ def main_section():
                 selected_whcid = st.selectbox("เลือก WHCID:", options=whcid_df['WHCID'] + ' - ' + whcid_df['NAME_TH'])
                 if st.button("👉 Enter WHCID"):
                     st.session_state.selected_whcid = selected_whcid
-                    st.experimental_rerun()
+                    st.rerun()
         except pyodbc.Error as e:
             st.error(f"Error connecting to the database: {e}")
     else:
@@ -338,7 +345,7 @@ def main_section():
             st.session_state.product_data = []
             st.session_state.product_quantity = 0
             st.session_state.remark = ""
-            st.experimental_rerun()
+            st.rerun()
 
 def app():
     if 'logged_in' not in st.session_state:
